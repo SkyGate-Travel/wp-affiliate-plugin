@@ -368,3 +368,21 @@ msgstr "به‌جای یک چرخنده، روند پیشرفت جستجو را 
 
 msgid "Flight and hotel searches query every supplier the platform sells and can genuinely take 30–60 seconds."
 msgstr "جستجوی پرواز و هتل از همهٔ تأمین‌کننده‌های پلتفرم استعلام می‌گیرد و واقعاً می‌تواند ۳۰ تا ۶۰ ثانیه طول بکشد."
+
+msgid "Several airlines"
+msgstr "چند ایرلاین"
+
+msgid "per adult"
+msgstr "هر بزرگسال"
+
+msgid "Airline’s own fare"
+msgstr "نرخ رسمی ایرلاین"
+
+msgid "%s seats left"
+msgstr "%s صندلی باقی مانده"
+
+msgid "Bag"
+msgstr "بار"
+
+msgid "Cabin"
+msgstr "دستی"

@@ -510,14 +510,234 @@
 	border: 1px solid var(--sky-aff-line);
 	border-radius: var(--sky-aff-radius);
 	background: var(--sky-aff-surface);
+	transition: border-color .15s, box-shadow .15s;
 }
 
+/* Enough to say "this row is a thing you can click", and no more: the widget
+   sits inside someone else's design. */
+.sky-aff__card:hover {
+	border-color: color-mix( in srgb, var(--sky-aff-accent) 35%, var(--sky-aff-line) );
+	box-shadow: 0 6px 18px -12px rgba( 0, 0, 0, .4 );
+}
+
+/*
+ * A fare is a row, not a tile: carrier, journey, price. On a narrow container
+ * those stack; from 720px they become three columns with the price block set
+ * apart, which is the shape every airline search uses and the one a visitor
+ * can scan without reading.
+ */
 .sky-aff__card--flight {
-	flex-direction: row;
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 12px;
+	padding: 14px 16px;
+}
+
+@container ( min-width: 720px ) {
+	.sky-aff__card--flight {
+		grid-template-columns: minmax( 150px, 210px ) minmax( 0, 1fr ) minmax( 150px, 200px );
+		align-items: center;
+		gap: 0;
+		padding: 0;
+	}
+
+	.sky-aff__card--flight > * {
+		padding: 16px;
+	}
+}
+
+.sky-aff__carrier {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.sky-aff__logos {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+}
+
+.sky-aff__logo {
+	display: flex;
+	overflow: hidden;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 50%;
+	/* Airline marks are drawn for a light ground, whatever the theme is. */
+	background: #fff;
+}
+
+/* Several carriers on one itinerary overlap, newest behind. */
+.sky-aff__logo + .sky-aff__logo {
+	margin-inline-start: -14px;
+}
+
+.sky-aff__logo img {
+	display: block;
+	width: 78%;
+	height: 78%;
+	object-fit: contain;
+}
+
+.sky-aff__logo--text {
+	background: var(--sky-aff-surface);
+	color: var(--sky-aff-muted);
+	font-size: .78em;
+	font-weight: 700;
+	letter-spacing: .5px;
+}
+
+.sky-aff__carrier-name {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.sky-aff__carrier-name > * {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.sky-aff__journey {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 0;
+}
+
+.sky-aff__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.sky-aff__leg {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sky-aff__leg-end {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.sky-aff__leg-end:last-child {
+	align-items: flex-end;
+	text-align: end;
+}
+
+.sky-aff__place {
+	color: var(--sky-aff-muted);
+	font-size: .82em;
+	white-space: nowrap;
+}
+
+.sky-aff__leg-line {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	min-width: 56px;
+}
+
+.sky-aff__leg-duration {
+	color: var(--sky-aff-muted);
+	font-size: .78em;
+	white-space: nowrap;
+}
+
+.sky-aff__leg-track {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 14px;
+}
+
+.sky-aff__leg-rail {
+	position: absolute;
+	inset-inline: 0;
+	height: 1px;
+	background: var(--sky-aff-line);
+}
+
+/* One pip per stop, which is the whole story a connection needs here. */
+.sky-aff__leg-stop {
+	position: relative;
+	width: 5px;
+	height: 5px;
+	margin-inline: 3px;
+	border-radius: 50%;
+	background: color-mix( in srgb, currentColor 45%, transparent );
+}
+
+.sky-aff__leg-plane {
+	position: relative;
+	width: 16px;
+	height: 16px;
+	margin-inline-start: auto;
+	transform: rotate( 90deg );
+	fill: currentColor;
+	color: var(--sky-aff-accent);
+}
+
+/* The nose follows the direction of travel, which reverses with the script. */
+[dir="rtl"] .sky-aff__leg-plane {
+	transform: rotate( -90deg );
+}
+
+.sky-aff__buy {
+	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--sky-aff-gap);
-	padding: 14px 16px;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+@container ( min-width: 720px ) {
+	.sky-aff__buy {
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		border-inline-start: 1px solid var(--sky-aff-line);
+		background: linear-gradient(
+			to bottom left,
+			color-mix( in srgb, var(--sky-aff-accent) 9%, transparent ),
+			transparent 70%
+		);
+	}
+}
+
+.sky-aff__card--flight .sky-aff__price {
+	font-size: 1.25em;
+	line-height: 1.25;
+}
+
+.sky-aff__fare-note {
+	color: var(--sky-aff-muted);
+	font-size: .78em;
+	font-weight: 600;
+}
+
+.sky-aff__seats {
+	color: #b3261e;
+	font-size: .78em;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 .sky-aff__thumb {
@@ -579,21 +799,10 @@
 	background: color-mix( in srgb, #1a7f37 12%, transparent );
 }
 
-.sky-aff__flight-times {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	flex: 1 1 220px;
-}
-
 .sky-aff__time {
 	font-size: 1.15em;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
-}
-
-.sky-aff__arrow {
-	color: var(--sky-aff-muted);
 }
 
 .sky-aff__dayshift {
@@ -631,12 +840,6 @@
 	padding-top: 8px;
 }
 
-.sky-aff__card--flight .sky-aff__card-foot {
-	margin-top: 0;
-	padding-top: 0;
-	flex: 0 0 auto;
-}
-
 .sky-aff__price {
 	font-weight: 700;
 	font-size: 1.05em;
@@ -645,9 +848,10 @@
 }
 
 .sky-aff__price-note {
-	font-weight: 400;
-	font-size: .78em;
+	display: block;
 	color: var(--sky-aff-muted);
+	font-size: .68em;
+	font-weight: 400;
 }
 
 .sky-aff__cta {

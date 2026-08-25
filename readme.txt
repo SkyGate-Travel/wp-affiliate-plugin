@@ -40,6 +40,8 @@ Because attribution happens at sign-up rather than at click time, a visitor who 
 
 The plugin sends no visitor data anywhere. Searches are relayed by *your* server to the platform API; the platform sees your server, not your visitors. Nothing is stored about who searched for what — only anonymous, short-lived response caching keyed on the search parameters.
 
+One exception worth stating plainly: flight results carry the airline's logo, and that image is loaded by the visitor's browser from the platform's own asset host. The platform therefore sees an image request from each visitor who is shown flight results. The request carries no referrer, so it does not say which page they were on.
+
 Following a link to the platform is, of course, a normal outbound visit, and the platform's own privacy policy applies from that point.
 
 == Installation ==
@@ -97,6 +99,7 @@ Yes. The code is applied when they create their account on the platform, and the
 == Changelog ==
 
 = 1.1.0 =
+* Flight cards redesigned around what a fare actually is: the airline's logo and name, the journey with its stops and duration on a rail, chips for cabin, aircraft and baggage, and the price set apart — with "N seats left" only when the number is small enough to matter.
 * Flight results now arrive supplier by supplier, relayed from the platform's own streamed search: first fares on screen in about two seconds instead of after half a minute. Where the platform is too old to offer it, the search falls back to the ordinary one on its own.
 * Every search — flights, hotels, activities, tours — now runs behind a progress bar with a running clock instead of a spinner, and results are written to the browser as they arrive.
 * A long search can no longer be cut off by a proxy or CDN idle timeout: the connection keeps sending while the platform is still thinking.

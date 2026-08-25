@@ -290,6 +290,13 @@ class Sky_Aff_Shortcode {
 			'stars'             => __( 'Stars', 'sky-affiliate-search' ),
 			'loadMore'          => __( 'Load more', 'sky-affiliate-search' ),
 			'affiliateDisclosure' => __( 'Booking happens on our travel partner’s site. We may earn a commission.', 'sky-affiliate-search' ),
+			'severalAirlines'   => __( 'Several airlines', 'sky-affiliate-search' ),
+			'perAdult'          => __( 'per adult', 'sky-affiliate-search' ),
+			'officialFare'      => __( 'Airline’s own fare', 'sky-affiliate-search' ),
+			/* translators: %s: number of seats still for sale. */
+			'seatsLeft'         => __( '%s seats left', 'sky-affiliate-search' ),
+			'baggage'           => __( 'Bag', 'sky-affiliate-search' ),
+			'cabinBag'          => __( 'Cabin', 'sky-affiliate-search' ),
 			'searchingProviders' => __( 'Contacting suppliers…', 'sky-affiliate-search' ),
 			'stillSearching'    => __( 'Still searching — some suppliers are slower than others.', 'sky-affiliate-search' ),
 			/* translators: unit appended to a number of seconds, e.g. "12s". */
