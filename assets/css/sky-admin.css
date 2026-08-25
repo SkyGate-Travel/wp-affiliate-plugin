@@ -1,0 +1,62 @@
+/**
+ * Sky Affiliate Search — settings screen styles.
+ */
+
+.sky-aff-admin .sky-aff-lede {
+	max-width: 46em;
+	font-size: 14px;
+	color: #50575e;
+}
+
+.sky-aff-admin .sky-aff-req {
+	color: #d63638;
+}
+
+.sky-aff-admin .sky-aff-warn {
+	color: #996800;
+}
+
+.sky-aff-admin .sky-aff-check {
+	display: inline-block;
+	margin-bottom: 4px;
+}
+
+.sky-aff-admin .sky-aff-copyable {
+	user-select: all;
+	padding: 2px 6px;
+	background: #f0f0f1;
+	border-radius: 3px;
+}
+
+.sky-aff-admin .sky-aff-test-result {
+	display: inline-block;
+	margin-inline-start: 10px;
+	font-weight: 600;
+}
+
+.sky-aff-admin .sky-aff-test-result.is-ok {
+	color: #1a7f37;
+}
+
+.sky-aff-admin .sky-aff-test-result.is-error {
+	color: #d63638;
+}
+
+.sky-aff-admin .sky-aff-test-result.is-warn {
+	color: #996800;
+}
+
+.sky-aff-admin .sky-aff-test-result.is-pending {
+	color: #50575e;
+	font-weight: 400;
+}
+
+.sky-aff-admin .sky-aff-shortcode-table {
+	max-width: 60em;
+	margin-top: 8px;
+}
+
+.sky-aff-admin .sky-aff-shortcode-table td,
+.sky-aff-admin .sky-aff-shortcode-table th {
+	padding: 8px 10px;
+}

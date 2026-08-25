@@ -1,0 +1,764 @@
+/**
+ * Sky Affiliate Search — front-end styles.
+ *
+ * Scoped under .sky-aff so the widget cannot leak into a host theme, and
+ * built from tokens so a theme's own colours mostly show through. The accent
+ * is injected as an inline custom property from the plugin settings.
+ */
+
+.sky-aff {
+	--sky-aff-accent: #0f62fe;
+	--sky-aff-fg: currentColor;
+	--sky-aff-muted: color-mix( in srgb, currentColor 60%, transparent );
+	--sky-aff-line: color-mix( in srgb, currentColor 15%, transparent );
+	--sky-aff-surface: color-mix( in srgb, currentColor 3%, transparent );
+	--sky-aff-radius: 10px;
+	--sky-aff-gap: 12px;
+
+	box-sizing: border-box;
+	container-type: inline-size;
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.sky-aff *,
+.sky-aff *::before,
+.sky-aff *::after {
+	box-sizing: inherit;
+}
+
+/*
+ * The `hidden` attribute is how this widget toggles the return-date field,
+ * the filter panel, the suggestion list and the inactive tab panels. The
+ * browser implements it as a low-priority `display: none`, so ANY author
+ * `display` rule beats it — `.sky-aff__field { display: flex }` alone was
+ * enough to leave a hidden return-date input on screen during a one-way
+ * search. Restate it at author level so hiding always wins.
+ */
+.sky-aff [hidden] {
+	display: none !important;
+}
+
+.sky-aff__title {
+	margin: 0 0 var(--sky-aff-gap);
+	font-size: 1.4em;
+}
+
+/* --------------------------------------------------------------------- tabs */
+
+.sky-aff__tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: var(--sky-aff-gap);
+	border-bottom: 1px solid var(--sky-aff-line);
+}
+
+.sky-aff__tab {
+	appearance: none;
+	background: none;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	padding: 10px 16px;
+	font: inherit;
+	color: var(--sky-aff-muted);
+	cursor: pointer;
+	transition: color .15s, border-color .15s;
+}
+
+.sky-aff__tab:hover {
+	color: var(--sky-aff-fg);
+}
+
+.sky-aff__tab.is-active {
+	color: var(--sky-aff-accent);
+	border-bottom-color: var(--sky-aff-accent);
+	font-weight: 600;
+}
+
+.sky-aff__tab:focus-visible {
+	outline: 2px solid var(--sky-aff-accent);
+	outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- forms */
+
+.sky-aff__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sky-aff-gap);
+	padding: 16px;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: var(--sky-aff-radius);
+	background: var(--sky-aff-surface);
+}
+
+.sky-aff__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sky-aff-gap);
+	align-items: flex-end;
+}
+
+.sky-aff__field {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 140px;
+	flex: 1 1 160px;
+}
+
+.sky-aff__field--grow {
+	flex: 3 1 220px;
+}
+
+.sky-aff__field--narrow {
+	flex: 0 0 100px;
+	min-width: 90px;
+}
+
+.sky-aff__field--submit {
+	flex: 0 0 auto;
+	min-width: 0;
+}
+
+.sky-aff__field > label {
+	font-size: .82em;
+	font-weight: 600;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__field input,
+.sky-aff__field select {
+	width: 100%;
+	padding: 9px 11px;
+	font: inherit;
+	color: inherit;
+	background: Canvas;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 8px;
+}
+
+.sky-aff__field input:focus,
+.sky-aff__field select:focus {
+	outline: 2px solid var(--sky-aff-accent);
+	outline-offset: 1px;
+	border-color: transparent;
+}
+
+.sky-aff__submit,
+.sky-aff__secondary,
+.sky-aff__cta {
+	appearance: none;
+	display: inline-block;
+	padding: 10px 20px;
+	font: inherit;
+	font-weight: 600;
+	border-radius: 8px;
+	border: 1px solid transparent;
+	cursor: pointer;
+	text-decoration: none;
+	text-align: center;
+	transition: filter .15s, background-color .15s;
+}
+
+.sky-aff__submit,
+.sky-aff__cta {
+	background: var(--sky-aff-accent);
+	color: #fff;
+}
+
+.sky-aff__submit:hover:not(:disabled),
+.sky-aff__cta:hover {
+	filter: brightness( 1.08 );
+}
+
+.sky-aff__submit:disabled {
+	opacity: .6;
+	cursor: progress;
+}
+
+.sky-aff__secondary {
+	background: transparent;
+	border-color: var(--sky-aff-line);
+	color: inherit;
+}
+
+.sky-aff__link-btn {
+	appearance: none;
+	background: none;
+	border: 0;
+	padding: 2px 4px;
+	font: inherit;
+	font-size: .88em;
+	color: var(--sky-aff-accent);
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+/* Trip-type pills */
+
+.sky-aff__triptype {
+	display: flex;
+	gap: 6px;
+}
+
+.sky-aff__pill input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.sky-aff__pill span {
+	display: inline-block;
+	padding: 5px 14px;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 999px;
+	font-size: .88em;
+	cursor: pointer;
+}
+
+.sky-aff__pill input:checked + span {
+	background: var(--sky-aff-accent);
+	border-color: var(--sky-aff-accent);
+	color: #fff;
+}
+
+.sky-aff__pill input:focus-visible + span {
+	outline: 2px solid var(--sky-aff-accent);
+	outline-offset: 2px;
+}
+
+.sky-aff__swap {
+	appearance: none;
+	align-self: flex-end;
+	margin-bottom: 4px;
+	width: 34px;
+	height: 34px;
+	flex: 0 0 auto;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 50%;
+	background: Canvas;
+	color: inherit;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+/* Rooms */
+
+.sky-aff__rooms {
+	margin: 0;
+	padding: 12px;
+	border: 1px dashed var(--sky-aff-line);
+	border-radius: 8px;
+}
+
+.sky-aff__rooms legend {
+	padding: 0 6px;
+	font-size: .82em;
+	font-weight: 600;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__room {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	padding: 6px 0;
+}
+
+.sky-aff__room + .sky-aff__room {
+	border-top: 1px solid var(--sky-aff-line);
+}
+
+.sky-aff__room-label {
+	font-size: .85em;
+	font-weight: 600;
+	min-width: 60px;
+}
+
+.sky-aff__room-field {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: .85em;
+}
+
+.sky-aff__room-field input {
+	width: 62px;
+	padding: 5px 7px;
+	font: inherit;
+	color: inherit;
+	background: Canvas;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 6px;
+}
+
+.sky-aff__room-field--age input {
+	width: 52px;
+}
+
+/* --------------------------------------------------------------- typeahead */
+
+.sky-aff__suggest {
+	position: absolute;
+	inset-inline: 0;
+	top: 100%;
+	z-index: 40;
+	margin: 4px 0 0;
+	padding: 4px;
+	max-height: 280px;
+	overflow-y: auto;
+	list-style: none;
+	background: Canvas;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba( 0, 0, 0, .12 );
+}
+
+.sky-aff__suggest-item {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: 8px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: .92em;
+}
+
+.sky-aff__suggest-main {
+	line-height: 1.3;
+}
+
+.sky-aff__suggest-sub {
+	font-size: .82em;
+	color: var(--sky-aff-muted);
+	line-height: 1.3;
+}
+
+.sky-aff__suggest-item:hover,
+.sky-aff__suggest-item.is-active {
+	background: color-mix( in srgb, var(--sky-aff-accent) 12%, transparent );
+}
+
+.sky-aff__suggest-empty {
+	padding: 8px 10px;
+	font-size: .9em;
+	color: var(--sky-aff-muted);
+}
+
+/* ------------------------------------------------------------------ filters */
+
+.sky-aff__filters {
+	margin-top: var(--sky-aff-gap);
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 8px;
+}
+
+.sky-aff__filters-head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 14px;
+	font-weight: 600;
+	cursor: pointer;
+	list-style: none;
+	user-select: none;
+}
+
+/* Replace the default disclosure triangle with one that follows text direction. */
+.sky-aff__filters-head::-webkit-details-marker {
+	display: none;
+}
+
+.sky-aff__filters-head::after {
+	content: '';
+	width: 7px;
+	height: 7px;
+	margin-inline-start: auto;
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: rotate( 45deg ) translate( -2px, -2px );
+	transition: transform .15s;
+}
+
+.sky-aff__filters[open] > .sky-aff__filters-head::after {
+	transform: rotate( -135deg ) translate( -2px, -2px );
+}
+
+.sky-aff__filters-head:focus-visible {
+	outline: 2px solid var(--sky-aff-accent);
+	outline-offset: -2px;
+	border-radius: 8px;
+}
+
+.sky-aff__filters-count {
+	display: inline-grid;
+	place-items: center;
+	min-width: 1.5em;
+	height: 1.5em;
+	padding: 0 5px;
+	border-radius: 999px;
+	background: var(--sky-aff-accent);
+	color: #fff;
+	font-size: .78em;
+	font-variant-numeric: tabular-nums;
+}
+
+.sky-aff__filters-foot {
+	padding: 0 14px 12px;
+}
+
+.sky-aff__filter-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+
+.sky-aff__filter-label {
+	font-size: .85em;
+	font-weight: 600;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 10px;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: 999px;
+	font-size: .85em;
+	cursor: pointer;
+}
+
+.sky-aff__chip:has( input:checked ) {
+	background: color-mix( in srgb, var(--sky-aff-accent) 14%, transparent );
+	border-color: var(--sky-aff-accent);
+}
+
+.sky-aff__chip-count {
+	font-size: .85em;
+	color: var(--sky-aff-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Facet groups stack; each is a label plus its own row of chips. */
+.sky-aff__filters-body {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	/* Even collapsed-by-default, an open panel with twenty groups should
+	   scroll inside itself rather than push the results off the page. */
+	max-height: 340px;
+	overflow-y: auto;
+	padding: 4px 14px 12px;
+}
+
+.sky-aff__filter-group {
+	align-items: baseline;
+}
+
+.sky-aff__filter-label {
+	flex: 0 0 auto;
+	min-width: 8em;
+}
+
+/* ------------------------------------------------------------------ results */
+
+.sky-aff__status {
+	margin: var(--sky-aff-gap) 0 8px;
+	font-size: .9em;
+	color: var(--sky-aff-muted);
+	min-height: 1.4em;
+}
+
+.sky-aff__status.is-error {
+	color: #b3261e;
+}
+
+.sky-aff__results {
+	display: grid;
+	gap: var(--sky-aff-gap);
+	grid-template-columns: 1fr;
+}
+
+@container ( min-width: 640px ) {
+	.sky-aff__results {
+		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
+	}
+}
+
+@container ( min-width: 960px ) {
+	.sky-aff__results {
+		grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
+	}
+}
+
+/* A flight row reads better full width than as a card in a grid. */
+.sky-aff__results:has( .sky-aff__card--flight ) {
+	grid-template-columns: 1fr;
+}
+
+.sky-aff__card {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid var(--sky-aff-line);
+	border-radius: var(--sky-aff-radius);
+	background: var(--sky-aff-surface);
+}
+
+.sky-aff__card--flight {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sky-aff-gap);
+	padding: 14px 16px;
+}
+
+.sky-aff__thumb {
+	aspect-ratio: 16 / 10;
+	overflow: hidden;
+	background: var(--sky-aff-line);
+}
+
+.sky-aff__thumb img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.sky-aff__card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 14px 16px;
+	flex: 1;
+}
+
+.sky-aff__card-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.sky-aff__card-title {
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.sky-aff__card-sub {
+	margin: 0;
+	font-size: .88em;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__stars {
+	font-size: .85em;
+	color: #f5a524;
+	letter-spacing: 1px;
+}
+
+.sky-aff__badge {
+	display: inline-block;
+	align-self: flex-start;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: .78em;
+	background: color-mix( in srgb, currentColor 10%, transparent );
+}
+
+.sky-aff__badge--good {
+	color: #1a7f37;
+	background: color-mix( in srgb, #1a7f37 12%, transparent );
+}
+
+.sky-aff__flight-times {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 220px;
+}
+
+.sky-aff__time {
+	font-size: 1.15em;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.sky-aff__arrow {
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__dayshift {
+	font-size: .7em;
+	font-weight: 700;
+	color: var(--sky-aff-accent);
+	vertical-align: super;
+}
+
+.sky-aff__muted {
+	font-size: .85em;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__reviews {
+	margin: 0;
+	font-size: .85em;
+}
+
+.sky-aff__score {
+	display: inline-block;
+	padding: 1px 7px;
+	border-radius: 5px;
+	background: var(--sky-aff-accent);
+	color: #fff;
+	font-variant-numeric: tabular-nums;
+}
+
+.sky-aff__card-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	margin-top: auto;
+	padding-top: 8px;
+}
+
+.sky-aff__card--flight .sky-aff__card-foot {
+	margin-top: 0;
+	padding-top: 0;
+	flex: 0 0 auto;
+}
+
+.sky-aff__price {
+	font-weight: 700;
+	font-size: 1.05em;
+	color: var(--sky-aff-accent);
+	white-space: nowrap;
+}
+
+.sky-aff__price-note {
+	font-weight: 400;
+	font-size: .78em;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__cta {
+	padding: 8px 16px;
+	font-size: .9em;
+	white-space: nowrap;
+}
+
+.sky-aff__more {
+	margin-top: var(--sky-aff-gap);
+	text-align: center;
+}
+
+.sky-aff__all {
+	margin: var(--sky-aff-gap) 0 0;
+	text-align: center;
+}
+
+.sky-aff__seeall {
+	color: var(--sky-aff-accent);
+	font-weight: 600;
+}
+
+.sky-aff__disclosure {
+	margin: 16px 0 0;
+	font-size: .8em;
+	color: var(--sky-aff-muted);
+}
+
+.sky-aff__notice,
+.sky-aff-notice {
+	padding: 12px 16px;
+	border: 1px solid #f0b849;
+	border-radius: 8px;
+	background: #fcf9e8;
+	color: #2c2c2c;
+}
+
+.sky-aff.is-loading .sky-aff__results {
+	opacity: .55;
+	transition: opacity .15s;
+}
+
+/* ----------------------------------------------------------------- progress */
+
+/*
+ * A search runs for as long as the slowest supplier takes, which is routinely
+ * half a minute. These two things — a bar that keeps moving and cards in the
+ * shape of the answer — are what tell a visitor the wait is a search working
+ * rather than a page that has broken.
+ */
+
+.sky-aff__progress {
+	overflow: hidden;
+	height: 3px;
+	margin: 0 0 var(--sky-aff-gap);
+	border-radius: 3px;
+	background: var(--sky-aff-line);
+}
+
+.sky-aff__progress-fill {
+	display: block;
+	width: 0;
+	height: 100%;
+	background: var(--sky-aff-accent);
+	transition: width .25s linear;
+}
+
+/* Results stream in while the search is still running, so they are readable
+   from the moment they land — the bar carries "not finished", not a dimmer. */
+.sky-aff__panel.is-streaming .sky-aff__results {
+	opacity: 1;
+}
+
+.sky-aff__skeleton {
+	position: relative;
+	overflow: hidden;
+	min-height: 104px;
+	border-style: dashed;
+}
+
+.sky-aff__skeleton.sky-aff__card--flight {
+	min-height: 74px;
+}
+
+.sky-aff__skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		color-mix( in srgb, currentColor 8%, transparent ),
+		transparent
+	);
+	transform: translateX( -100% );
+	animation: sky-aff-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes sky-aff-shimmer {
+	100% {
+		transform: translateX( 100% );
+	}
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.sky-aff * {
+		transition: none !important;
+	}
+
+	.sky-aff__skeleton::after {
+		animation: none;
+	}
+}
