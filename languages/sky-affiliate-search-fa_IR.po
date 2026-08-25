@@ -1,0 +1,370 @@
+# Persian translation for Sky Affiliate Search.
+msgid ""
+msgstr ""
+"Project-Id-Version: Sky Affiliate Search 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Flights"
+msgstr "پرواز"
+
+msgid "Hotels"
+msgstr "هتل"
+
+msgid "Activities"
+msgstr "تفریحات"
+
+msgid "Tours"
+msgstr "تور"
+
+msgid "Search"
+msgstr "جستجو"
+
+msgid "Searching…"
+msgstr "در حال جستجو…"
+
+msgid "From"
+msgstr "مبدأ"
+
+msgid "To"
+msgstr "مقصد"
+
+msgid "Departure"
+msgstr "تاریخ رفت"
+
+msgid "Return"
+msgstr "تاریخ برگشت"
+
+msgid "One way"
+msgstr "یک‌طرفه"
+
+msgid "Round trip"
+msgstr "رفت و برگشت"
+
+msgid "Adults"
+msgstr "بزرگسال"
+
+msgid "Children"
+msgstr "کودک"
+
+msgid "Infants"
+msgstr "نوزاد"
+
+msgid "Cabin"
+msgstr "کلاس پروازی"
+
+msgid "Economy"
+msgstr "اکونومی"
+
+msgid "Premium economy"
+msgstr "اکونومی ویژه"
+
+msgid "Business"
+msgstr "بیزینس"
+
+msgid "First"
+msgstr "درجه یک"
+
+msgid "City or airport"
+msgstr "شهر یا فرودگاه"
+
+msgid "City or hotel"
+msgstr "شهر یا هتل"
+
+msgid "Where are you going?"
+msgstr "به کجا سفر می‌کنید؟"
+
+msgid "Check-in"
+msgstr "تاریخ ورود"
+
+msgid "Check-out"
+msgstr "تاریخ خروج"
+
+msgid "Rooms"
+msgstr "اتاق‌ها"
+
+msgid "Room"
+msgstr "اتاق"
+
+msgid "Add room"
+msgstr "افزودن اتاق"
+
+msgid "Remove"
+msgstr "حذف"
+
+msgid "What are you looking for?"
+msgstr "دنبال چه چیزی می‌گردید؟"
+
+msgid "Museum tickets, day trips, transfers…"
+msgstr "بلیت موزه، تور یک‌روزه، ترانسفر…"
+
+msgid "Country"
+msgstr "کشور"
+
+msgid "City"
+msgstr "شهر"
+
+msgid "Category"
+msgstr "دسته‌بندی"
+
+msgid "Any country"
+msgstr "همه کشورها"
+
+msgid "Any city"
+msgstr "همه شهرها"
+
+msgid "Any category"
+msgstr "همه دسته‌ها"
+
+msgid "Any type"
+msgstr "همه انواع"
+
+msgid "Min price"
+msgstr "حداقل قیمت"
+
+msgid "Max price"
+msgstr "حداکثر قیمت"
+
+msgid "Search tours"
+msgstr "جستجوی تور"
+
+msgid "Destination or tour name"
+msgstr "مقصد یا نام تور"
+
+msgid "No results matched this search."
+msgstr "نتیجه‌ای برای این جستجو پیدا نشد."
+
+msgid "Something went wrong. Please try again."
+msgstr "مشکلی پیش آمد. دوباره تلاش کنید."
+
+msgid "View & book"
+msgstr "مشاهده و رزرو"
+
+msgid "See all results"
+msgstr "مشاهده همه نتایج"
+
+msgid "%s results"
+msgstr "%s نتیجه"
+
+msgid "from"
+msgstr "از"
+
+msgid "per night"
+msgstr "هر شب"
+
+msgid "nights"
+msgstr "شب"
+
+msgid "stop"
+msgstr "توقف"
+
+msgid "stops"
+msgstr "توقف"
+
+msgid "Direct"
+msgstr "بدون توقف"
+
+msgid "Type at least 2 characters…"
+msgstr "حداقل ۲ حرف وارد کنید…"
+
+msgid "No matching places."
+msgstr "مکانی پیدا نشد."
+
+msgid "Free cancellation"
+msgstr "کنسلی رایگان"
+
+msgid "Filters"
+msgstr "فیلترها"
+
+msgid "Clear"
+msgstr "پاک کردن"
+
+msgid "Stars"
+msgstr "ستاره"
+
+msgid "Load more"
+msgstr "نمایش بیشتر"
+
+msgid "Booking happens on our travel partner’s site. We may earn a commission."
+msgstr "رزرو نهایی در سایت همکار سفر ما انجام می‌شود. ممکن است بابت آن پورسانت دریافت کنیم."
+
+msgid "Swap origin and destination"
+msgstr "جابه‌جایی مبدأ و مقصد"
+
+msgid "Product type"
+msgstr "نوع محصول"
+
+msgid "Trip type"
+msgstr "نوع سفر"
+
+msgid "Sky Affiliate Search"
+msgstr "جستجوی همکاری در فروش Sky"
+
+msgid "Sky Search"
+msgstr "جستجوی Sky"
+
+msgid "Connection"
+msgstr "اتصال"
+
+msgid "Platform domain"
+msgstr "دامنه پلتفرم"
+
+msgid "API URL"
+msgstr "آدرس API"
+
+msgid "Affiliate"
+msgstr "همکاری در فروش"
+
+msgid "Affiliate code"
+msgstr "کد معرف"
+
+msgid "Test connection"
+msgstr "تست اتصال"
+
+msgid "Testing…"
+msgstr "در حال تست…"
+
+msgid "Connected to %s"
+msgstr "متصل به %s"
+
+msgid "Connected."
+msgstr "اتصال برقرار شد."
+
+msgid "Connection failed"
+msgstr "اتصال ناموفق"
+
+msgid "Save your changes first, then test."
+msgstr "اول تغییرات را ذخیره کنید، بعد تست بگیرید."
+
+msgid "Status"
+msgstr "وضعیت"
+
+msgid "Products"
+msgstr "محصولات"
+
+msgid "Language"
+msgstr "زبان"
+
+msgid "Accent colour"
+msgstr "رنگ اصلی"
+
+msgid "Outgoing links"
+msgstr "لینک‌های خروجی"
+
+msgid "Open the platform in a new tab"
+msgstr "باز کردن پلتفرم در تب جدید"
+
+msgid "Performance"
+msgstr "کارایی"
+
+msgid "Cache results for"
+msgstr "مدت نگهداری نتایج در کش"
+
+msgid "Request timeout"
+msgstr "مهلت پاسخ"
+
+msgid "Rate limit"
+msgstr "محدودیت تعداد درخواست"
+
+msgid "seconds"
+msgstr "ثانیه"
+
+msgid "searches per visitor per minute"
+msgstr "جستجو برای هر بازدیدکننده در دقیقه"
+
+msgid "Search page"
+msgstr "صفحه جستجو"
+
+msgid "Travel Search"
+msgstr "جستجوی سفر"
+
+msgid "Settings"
+msgstr "تنظیمات"
+
+msgid "Open settings"
+msgstr "باز کردن تنظیمات"
+
+msgid "Too many searches. Please wait a moment and try again."
+msgstr "تعداد جستجوها زیاد است. کمی صبر کنید و دوباره تلاش کنید."
+
+msgid "Search is not available yet."
+msgstr "جستجو هنوز در دسترس نیست."
+
+msgid "Choose a city or a property to search."
+msgstr "برای جستجو یک شهر یا هتل انتخاب کنید."
+
+msgid "Enter a valid check-in and check-out date."
+msgstr "تاریخ ورود و خروج معتبر وارد کنید."
+
+msgid "Choose an origin and a destination."
+msgstr "مبدأ و مقصد را انتخاب کنید."
+
+msgid "Origin and destination must differ."
+msgstr "مبدأ و مقصد نباید یکی باشند."
+
+msgid "Enter a departure date."
+msgstr "تاریخ رفت را وارد کنید."
+
+msgid "The return date cannot be before the departure date."
+msgstr "تاریخ برگشت نمی‌تواند قبل از تاریخ رفت باشد."
+
+msgid "The Sky platform did not recognise this domain. Check the platform domain in the plugin settings."
+msgstr "پلتفرم Sky این دامنه را نشناخت. دامنه پلتفرم را در تنظیمات پلاگین بررسی کنید."
+
+msgid "Could not reach the Sky platform."
+msgstr "دسترسی به پلتفرم Sky ممکن نشد."
+
+msgid "The search parameters were rejected by the platform."
+msgstr "پارامترهای جستجو توسط پلتفرم رد شد."
+
+msgid "The Sky platform returned an error."
+msgstr "پلتفرم Sky خطا برگرداند."
+
+msgid "all airports"
+msgstr "همه فرودگاه‌ها"
+
+msgid "properties"
+msgstr "اقامتگاه"
+
+msgid "reviews"
+msgstr "نظر"
+
+msgid "Popular destinations"
+msgstr "مقصدهای پرطرفدار"
+
+msgid "Clear all filters"
+msgstr "پاک کردن همه فیلترها"
+
+msgid "Links will look like:"
+msgstr "لینک‌ها این شکلی خواهند بود:"
+
+msgid "Contacting suppliers…"
+msgstr "در حال پرس‌وجو از تأمین‌کننده‌ها…"
+
+msgid "Still searching — some suppliers are slower than others."
+msgstr "هنوز در حال جستجو — بعضی تأمین‌کننده‌ها کندتر جواب می‌دهند."
+
+msgid "s"
+msgstr "ث"
+
+msgid "Shown instantly from a recent search."
+msgstr "از یک جستجوی اخیر، بی‌درنگ نمایش داده شد."
+
+msgid "Unknown search type."
+msgstr "نوع جستجو شناخته نشد."
+
+msgid "Streaming"
+msgstr "نمایش تدریجی نتایج"
+
+msgid "Send results to the browser as they arrive"
+msgstr "نتایج را همان‌طور که می‌رسند به مرورگر بفرست"
+
+msgid "Shows the search progressing instead of a spinner, and keeps a long search from being cut off by a proxy or CDN timeout. Turn it off only if results never appear on this host — some caching layers hold a response back until it is complete, which makes streaming pointless rather than faster."
+msgstr "به‌جای یک چرخنده، روند پیشرفت جستجو را نشان می‌دهد و نمی‌گذارد جستجوی طولانی با تایم‌اوت پراکسی یا CDN قطع شود. فقط وقتی خاموشش کنید که روی این هاست هیچ نتیجه‌ای نمایش داده نمی‌شود — بعضی لایه‌های کش پاسخ را تا کامل شدن نگه می‌دارند و در آن حالت نمایش تدریجی بی‌فایده است."
+
+msgid "Flight and hotel searches query every supplier the platform sells and can genuinely take 30–60 seconds."
+msgstr "جستجوی پرواز و هتل از همهٔ تأمین‌کننده‌های پلتفرم استعلام می‌گیرد و واقعاً می‌تواند ۳۰ تا ۶۰ ثانیه طول بکشد."
