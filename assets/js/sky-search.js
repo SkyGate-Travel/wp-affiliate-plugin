@@ -1331,6 +1331,297 @@
 		return ( h ? num( h ) + ( t.hourShort || 'h' ) + ' ' : '' ) + num( m ) + ( t.minuteShort || 'm' );
 	}
 
+	/**
+	 * An inline SVG, because a widget that drops into someone else's theme
+	 * cannot assume an icon font is loaded and should not fetch one.
+	 *
+	 * @param {string} path  Path data, on a 24×24 grid.
+	 * @param {string} cls   Class for the <svg>.
+	 * @param {string} label Accessible name, or '' for decoration.
+	 * @return {SVGElement}
+	 */
+	function icon( path, cls, label ) {
+		var NS = 'http://www.w3.org/2000/svg';
+		var svg = document.createElementNS( NS, 'svg' );
+		var shape = document.createElementNS( NS, 'path' );
+
+		shape.setAttribute( 'd', path );
+		svg.setAttribute( 'viewBox', '0 0 24 24' );
+		svg.setAttribute( 'class', cls );
+		svg.setAttribute( 'focusable', 'false' );
+
+		if ( label ) {
+			svg.setAttribute( 'role', 'img' );
+			svg.setAttribute( 'aria-label', label );
+		} else {
+			svg.setAttribute( 'aria-hidden', 'true' );
+		}
+
+		svg.appendChild( shape );
+
+		return svg;
+	}
+
+	var PLANE_PATH = 'M21 16v-2l-8-5V3.5C13 2.67 12.33 2 11.5 2S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z';
+
+	/**
+	 * Who is actually flying a fare.
+	 *
+	 * A one-leg fare names its airline; a connection names one per leg, and
+	 * the same carrier can appear on several of them. The platform's own site
+	 * stacks the distinct logos and calls it "several airlines" past the
+	 * first, which is the honest summary for a card this size.
+	 *
+	 * @param {Object} row Fare.
+	 * @return {Array<Object>} [ { name, code, logo } ], never undefined.
+	 */
+	function airlinesOf( row ) {
+		var seen = {};
+		var out = [];
+
+		function add( airline, fallbackCode ) {
+			airline = airline || {};
+
+			var code = airline.iata_code || airline.iata || fallbackCode || '';
+			var name = airline.name || airline.en_name || code;
+			var key = airline.id || code || name;
+
+			if ( ! key || seen[ key ] ) {
+				return;
+			}
+
+			seen[ key ] = true;
+			out.push( { name: name, code: code, logo: airline.logo || '' } );
+		}
+
+		var routes = pick( row, [ 'routes', 'legs' ] );
+
+		if ( Array.isArray( routes ) ) {
+			routes.forEach( function ( route ) {
+				if ( route && route.airline ) {
+					add( route.airline );
+				}
+			} );
+		}
+
+		if ( ! out.length ) {
+			add( pick( row, [ 'airline' ] ), pick( row, [ 'iata_code' ] ) );
+		}
+
+		return out;
+	}
+
+	/**
+	 * One airline's mark: its logo, or its code in the same circle when there
+	 * is no logo or the image will not load. An empty ring reads as a broken
+	 * page; two letters read as an airline.
+	 *
+	 * @param {Object} airline From airlinesOf().
+	 * @return {HTMLElement}
+	 */
+	function airlineMark( airline ) {
+		var mark = el( 'span', 'sky-aff__logo' );
+		var code = airline.code || ( airline.name || '' ).slice( 0, 2 ).toUpperCase();
+
+		function asText() {
+			mark.className = 'sky-aff__logo sky-aff__logo--text';
+			mark.textContent = code;
+		}
+
+		if ( ! airline.logo ) {
+			asText();
+
+			return mark;
+		}
+
+		var img = document.createElement( 'img' );
+
+		img.src = airline.logo;
+		img.alt = airline.name || code;
+		img.loading = 'lazy';
+		img.decoding = 'async';
+		// The logo is served by the platform, not by this site. Sending no
+		// referrer keeps which page a visitor was reading out of its logs.
+		img.referrerPolicy = 'no-referrer';
+		img.addEventListener( 'error', asText );
+		mark.appendChild( img );
+
+		return mark;
+	}
+
+	/**
+	 * Cabin, as a word rather than the API's shouted enum.
+	 *
+	 * @param {Object} row Fare.
+	 * @return {string}
+	 */
+	function cabinName( row ) {
+		var named = String( pick( row, [ 'class' ] ) || '' ).toLowerCase();
+		var byNumber = { 1: t.economy, 2: t.business, 3: t.first };
+
+		if ( named.indexOf( 'business' ) !== -1 ) {
+			return t.business || 'Business';
+		}
+
+		if ( named.indexOf( 'first' ) !== -1 ) {
+			return t.first || 'First';
+		}
+
+		if ( named.indexOf( 'economy' ) !== -1 ) {
+			return t.economy || 'Economy';
+		}
+
+		return byNumber[ pick( row, [ 'cabin_type' ] ) ] || '';
+	}
+
+	/**
+	 * Baggage as it fits on a chip.
+	 *
+	 * Providers spell it out — "1 Piece(s) x 8 Kilogram(s)" — which is three
+	 * times the width of anything else on the card and says nothing extra.
+	 *
+	 * @param {*} value Raw allowance.
+	 * @return {string}
+	 */
+	function baggage( value ) {
+		if ( ! value ) {
+			return '';
+		}
+
+		return String( value )
+			.replace( /kilogram\(s\)/gi, 'kg' )
+			.replace( /kilograms?\b/gi, 'kg' )
+			.replace( /piece\(s\)/gi, '×' )
+			.replace( /pieces?\b/gi, '×' )
+			.replace( /\s*x\s*/gi, ' ' )
+			.replace( /\s+/g, ' ' )
+			.trim();
+	}
+
+	/**
+	 * The chips above a fare's times: how many stops, which cabin, what you
+	 * may bring, and anything the platform itself tagged it with.
+	 *
+	 * @param {Object} row       Fare.
+	 * @param {number} stopCount Stops.
+	 * @return {HTMLElement}
+	 */
+	function flightChips( row, stopCount ) {
+		var chips = el( 'div', 'sky-aff__chips' );
+		var stopLabel = 0 === stopCount
+			? ( t.direct || 'Direct' )
+			: num( stopCount ) + ' ' + ( 1 === stopCount ? ( t.stop || 'stop' ) : ( t.stops || 'stops' ) );
+
+		chips.appendChild(
+			el( 'span', 'sky-aff__badge' + ( 0 === stopCount ? ' sky-aff__badge--good' : '' ), stopLabel )
+		);
+
+		var cabin = cabinName( row );
+
+		if ( cabin ) {
+			chips.appendChild( el( 'span', 'sky-aff__badge', cabin ) );
+		}
+
+		var aircraft = pick( row, [ 'aircraft' ] );
+
+		// Only on a direct flight is there one aircraft to name.
+		if ( aircraft && 0 === stopCount ) {
+			chips.appendChild( el( 'span', 'sky-aff__badge', aircraft ) );
+		}
+
+		var free = baggage( pick( row, [ 'free_baggage' ] ) );
+		var cabinBag = baggage( pick( row, [ 'cabin_baggage' ] ) );
+
+		if ( free ) {
+			chips.appendChild( el( 'span', 'sky-aff__badge', ( t.baggage || 'Baggage' ) + ' ' + free ) );
+		}
+
+		if ( cabinBag ) {
+			chips.appendChild( el( 'span', 'sky-aff__badge', ( t.cabinBag || 'Cabin' ) + ' ' + cabinBag ) );
+		}
+
+		// The platform tags fares itself — "charter", "no refund" and the
+		// like — and localises them; pass them straight through.
+		var labels = pick( row, [ 'fa' === cfg.language ? 'labels' : 'labels_en', 'labels' ] );
+
+		if ( labels && Array.isArray( labels.labels ) ) {
+			labels = labels.labels;
+		}
+
+		if ( Array.isArray( labels ) ) {
+			labels.slice( 0, 2 ).forEach( function ( label ) {
+				if ( label && 'string' === typeof label ) {
+					chips.appendChild( el( 'span', 'sky-aff__badge', label ) );
+				}
+			} );
+		}
+
+		return chips;
+	}
+
+	/**
+	 * One end of the journey: the clock, the airport code, the city.
+	 *
+	 * @param {string} time  Timestamp.
+	 * @param {string} code  Airport code.
+	 * @param {string} place City name.
+	 * @param {number} shift Days later than departure, for an arrival.
+	 * @return {HTMLElement}
+	 */
+	function legEnd( time, code, place, shift ) {
+		var end = el( 'div', 'sky-aff__leg-end' );
+		var clock = el( 'strong', 'sky-aff__time', clockTime( time ) || '—' );
+
+		if ( shift > 0 ) {
+			// An overnight leg lands on a later date; without this the times
+			// read as a flight that arrives before it left.
+			clock.appendChild( el( 'sup', 'sky-aff__dayshift', '+' + num( shift ) ) );
+		}
+
+		end.appendChild( clock );
+
+		var label = code || '';
+
+		if ( place && place !== code ) {
+			label = label ? label + ' · ' + place : place;
+		}
+
+		if ( label ) {
+			end.appendChild( el( 'span', 'sky-aff__place', label ) );
+		}
+
+		return end;
+	}
+
+	/**
+	 * The line between the two ends: how long, and a pip for each stop.
+	 *
+	 * @param {*}      mins      Duration in minutes.
+	 * @param {number} stopCount Stops.
+	 * @return {HTMLElement}
+	 */
+	function legLine( mins, stopCount ) {
+		var line = el( 'div', 'sky-aff__leg-line' );
+		var dur = duration( mins );
+
+		if ( dur ) {
+			line.appendChild( el( 'span', 'sky-aff__leg-duration', dur ) );
+		}
+
+		var track = el( 'span', 'sky-aff__leg-track' );
+
+		track.appendChild( el( 'span', 'sky-aff__leg-rail' ) );
+
+		for ( var i = 0; i < Math.min( stopCount, 3 ); i++ ) {
+			track.appendChild( el( 'span', 'sky-aff__leg-stop' ) );
+		}
+
+		track.appendChild( icon( PLANE_PATH, 'sky-aff__leg-plane', '' ) );
+		line.appendChild( track );
+
+		return line;
+	}
+
 	function renderFlights( container, rows, deepLink, append ) {
 		if ( ! append ) {
 			container.innerHTML = '';
@@ -1341,7 +1632,6 @@
 
 			// Real key first in each list; the alternatives cover other
 			// providers and older API builds.
-			var airline = pick( row, [ 'airline.name', 'airline.en_name', 'AirlineName', 'Airline' ] ) || '';
 			var iata = pick( row, [ 'iata_code', 'airline.iata_code' ] ) || '';
 			var flightNo = pick( row, [ 'flight_number', 'FlightNumber', 'number' ] ) || '';
 			var depTime = pick( row, [ 'leave_date_time', 'departure_time', 'DepartureDateTime' ] ) || '';
@@ -1355,7 +1645,7 @@
 			var to = pick( row, [ 'to', 'destination_airport.city_en_name' ] ) || '';
 			var origin = pick( row, [ 'origin' ] ) || '';
 			var dest = pick( row, [ 'destination' ] ) || '';
-			var legs = pick( row, [ 'legs' ] );
+			var legs = pick( row, [ 'routes', 'legs' ] );
 			var mins = pick( row, [ 'flight_duration' ] );
 
 			// No `stops` field exists; a journey's stop count is the number of
@@ -1364,72 +1654,85 @@
 				? legs.length - 1
 				: Number( pick( row, [ 'stops', 'stop_count' ] ) || 0 );
 
-			var head = el( 'div', 'sky-aff__card-head' );
+			var airlines = airlinesOf( row );
+			var carrier = el( 'div', 'sky-aff__carrier' );
+			var marks = el( 'div', 'sky-aff__logos' );
 
-			head.appendChild( el( 'span', 'sky-aff__card-title', airline || iata || '—' ) );
+			airlines.slice( 0, 3 ).forEach( function ( airline ) {
+				marks.appendChild( airlineMark( airline ) );
+			} );
 
-			var codeLabel = [ iata, flightNo ].filter( Boolean ).join( ' ' );
+			carrier.appendChild( marks );
 
-			if ( codeLabel ) {
-				head.appendChild( el( 'span', 'sky-aff__card-sub', codeLabel ) );
+			var named = el( 'div', 'sky-aff__carrier-name' );
+
+			named.appendChild(
+				el(
+					'span',
+					'sky-aff__card-title',
+					airlines.length > 1
+						? ( t.severalAirlines || 'Several airlines' )
+						: ( ( airlines[ 0 ] && airlines[ 0 ].name ) || '—' )
+				)
+			);
+
+			var subtitle = [ iata, flightNo ].filter( Boolean ).join( ' ' );
+
+			if ( subtitle ) {
+				named.appendChild( el( 'span', 'sky-aff__card-sub', subtitle ) );
 			}
 
-			card.appendChild( head );
+			carrier.appendChild( named );
+			card.appendChild( carrier );
 
-			var times = el( 'div', 'sky-aff__flight-times' );
-			var dep = clockTime( depTime );
-			var arr = clockTime( arrTime );
+			var journey = el( 'div', 'sky-aff__journey' );
 
-			times.appendChild( el( 'span', 'sky-aff__time', dep || '—' ) );
-			times.appendChild( el( 'span', 'sky-aff__arrow', '→' ) );
-			times.appendChild( el( 'span', 'sky-aff__time', arr || '—' ) );
+			journey.appendChild( flightChips( row, stopCount ) );
 
-			// An overnight leg lands on a later date; without this the times
-			// read as a flight that arrives before it left.
-			var dayShift = datePart( depTime ) && datePart( arrTime )
+			var leg = el( 'div', 'sky-aff__leg' );
+			var shift = datePart( depTime ) && datePart( arrTime )
 				? daysBetween( datePart( depTime ), datePart( arrTime ) )
 				: 0;
-
-			if ( dayShift > 0 ) {
-				times.appendChild( el( 'sup', 'sky-aff__dayshift', '+' + num( dayShift ) ) );
-			}
-
-			var stopLabel = 0 === stopCount
-				? ( t.direct || 'Direct' )
-				: num( stopCount ) + ' ' + ( 1 === stopCount ? ( t.stop || 'stop' ) : ( t.stops || 'stops' ) );
-
-			times.appendChild( el( 'span', 'sky-aff__badge', stopLabel ) );
-
-			var dur = duration( mins );
-
-			if ( dur ) {
-				times.appendChild( el( 'span', 'sky-aff__muted', dur ) );
-			}
-
-			card.appendChild( times );
 
 			// The searched route and the flown route can differ: a DXB search
 			// legitimately returns a flight out of SHJ, and hiding that is a
 			// nasty surprise at the airport.
-			var routeLabel = [ from || origin, to || dest ].filter( Boolean ).join( ' → ' );
-			var codes = [ origin, dest ].filter( Boolean ).join( '–' );
+			leg.appendChild( legEnd( depTime, origin, from, 0 ) );
+			leg.appendChild( legLine( mins, stopCount ) );
+			leg.appendChild( legEnd( arrTime, dest, to, shift ) );
+			journey.appendChild( leg );
+			card.appendChild( journey );
 
-			if ( routeLabel ) {
-				card.appendChild(
-					el( 'span', 'sky-aff__card-sub', codes ? routeLabel + ' (' + codes + ')' : routeLabel )
-				);
-			}
-
-			var foot = el( 'div', 'sky-aff__card-foot' );
+			var buy = el( 'div', 'sky-aff__buy' );
 			var priceText = money( price, currency );
 
 			if ( priceText ) {
-				foot.appendChild( el( 'span', 'sky-aff__price', priceText ) );
+				var amount = el( 'span', 'sky-aff__price', priceText );
+
+				amount.appendChild( el( 'span', 'sky-aff__price-note', t.perAdult || 'per adult' ) );
+				buy.appendChild( amount );
 			}
 
-			foot.appendChild( outLink( deepLink, t.viewOnPlatform || 'View & book', 'sky-aff__cta' ) );
-			card.appendChild( foot );
+			// "system" is the platform's word for a fare sold at the airline's
+			// own price rather than a charter seat, and it is the one thing on
+			// the card a price-shopper actually wants to know.
+			if ( 'system' === pick( row, [ 'ticket_type' ] ) && t.officialFare ) {
+				buy.appendChild( el( 'span', 'sky-aff__fare-note', t.officialFare ) );
+			}
 
+			buy.appendChild( outLink( deepLink, t.viewOnPlatform || 'View & book', 'sky-aff__cta' ) );
+
+			var seats = Number( pick( row, [ 'seat', 'seats' ] ) );
+
+			// Past a handful, a seat count is noise; below it, it is the
+			// reason someone books today.
+			if ( isFinite( seats ) && seats > 0 && seats <= 8 ) {
+				buy.appendChild(
+					el( 'span', 'sky-aff__seats', ( t.seatsLeft || '%s seats left' ).replace( '%s', num( seats ) ) )
+				);
+			}
+
+			card.appendChild( buy );
 			container.appendChild( card );
 		} );
 	}
