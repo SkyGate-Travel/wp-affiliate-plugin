@@ -1,0 +1,9 @@
+# PostCSS tooling for the stylesheet build. Not part of the plugin, and 4.8 MB
+# of it — assets/css/sky-search.css is committed built.
+node_modules/
+
+# Editor and OS noise.
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
