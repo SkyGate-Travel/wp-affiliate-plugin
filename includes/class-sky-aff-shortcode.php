@@ -279,6 +279,11 @@ class Sky_Aff_Shortcode {
 			'typeToSearch'      => __( 'Type at least 2 characters…', 'sky-affiliate-search' ),
 			'noPlaces'          => __( 'No matching places.', 'sky-affiliate-search' ),
 			'allAirports'       => __( 'all airports', 'sky-affiliate-search' ),
+			// Both sides of a flight search are chosen from a list, so the only
+			// ways to get them wrong are to leave one empty or to pick the same
+			// airport twice. Neither is a failure, so neither says "went wrong".
+			'chooseAirports'    => __( 'Choose where you are flying from and to.', 'sky-affiliate-search' ),
+			'sameAirports'      => __( 'Origin and destination are the same. Pick a different one.', 'sky-affiliate-search' ),
 			'properties'        => __( 'properties', 'sky-affiliate-search' ),
 			'reviews'           => __( 'reviews', 'sky-affiliate-search' ),
 			// Compact duration units, e.g. "2h 15m".

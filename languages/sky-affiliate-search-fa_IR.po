@@ -327,6 +327,12 @@ msgstr "پلتفرم Sky خطا برگرداند."
 msgid "all airports"
 msgstr "همه فرودگاه‌ها"
 
+msgid "Choose where you are flying from and to."
+msgstr "مبدا و مقصد را از لیست انتخاب کنید."
+
+msgid "Origin and destination are the same. Pick a different one."
+msgstr "مبدا و مقصد یکی است. یکی را عوض کنید."
+
 msgid "properties"
 msgstr "اقامتگاه"
 

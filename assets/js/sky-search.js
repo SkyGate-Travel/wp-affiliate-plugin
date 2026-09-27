@@ -1176,14 +1176,17 @@
 			var origin = form.querySelector( '[data-sky-code="origin"]' ).value;
 			var destination = form.querySelector( '[data-sky-code="destination"]' ).value;
 
+			// The hidden code fields are only filled by choosing from the
+			// list, so an empty one means the visitor typed a name and never
+			// picked a row — not that they typed too little.
 			if ( ! origin || ! destination ) {
-				p.say( t.typeToSearch || 'Choose an origin and destination.', 'error' );
+				p.say( t.chooseAirports || 'Choose where you are flying from and to.', 'error' );
 
 				return;
 			}
 
 			if ( origin === destination ) {
-				p.say( t.error, 'error' );
+				p.say( t.sameAirports || 'Origin and destination are the same. Pick a different one.', 'error' );
 
 				return;
 			}
