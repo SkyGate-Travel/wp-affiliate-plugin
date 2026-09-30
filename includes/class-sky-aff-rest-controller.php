@@ -1014,11 +1014,13 @@ class Sky_Aff_Rest_Controller {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function activity_suggest( WP_REST_Request $request ) {
+		$q      = trim( (string) $request->get_param( 'q' ) );
 		$result = $this->client->get(
 			'activities',
 			array(
-				'q'        => trim( (string) $request->get_param( 'q' ) ),
-				'per_page' => 6,
+				'q'        => $q,
+				// Fifty to choose six from; see rank_by_word_start().
+				'per_page' => 50,
 				'language' => Sky_Aff_Settings::language(),
 			),
 			false,
@@ -1044,7 +1046,7 @@ class Sky_Aff_Rest_Controller {
 
 		$items = array();
 
-		foreach ( array_slice( $rows, 0, 6 ) as $row ) {
+		foreach ( array_slice( $this->rank_by_word_start( $rows, $q ), 0, 6 ) as $row ) {
 			if ( ! is_array( $row ) ) {
 				continue;
 			}
@@ -1079,6 +1081,54 @@ class Sky_Aff_Rest_Controller {
 		}
 
 		return new WP_REST_Response( array( 'data' => $items ), 200 );
+	}
+
+	/**
+	 * Put rows where a word starts with the query ahead of the rest.
+	 *
+	 * The platform matches `q` anywhere in the text, so "rom" finds "Tour of
+	 * Capri from Naples" as readily as "Rome Colosseum Tour". For a search
+	 * that is fine; for the six lines under a half-typed word it is noise.
+	 * Asking for fifty — no slower upstream, and only six slim rows go on to
+	 * the browser — and keeping the best six puts the ones the visitor meant
+	 * first, while a query that only matches mid-word still shows something.
+	 *
+	 * @param array  $rows Upstream product rows, in upstream order.
+	 * @param string $q    What the visitor typed.
+	 * @return array Same rows, best first; ties keep upstream order.
+	 */
+	private function rank_by_word_start( array $rows, $q ) {
+		$needle = mb_strtolower( $q );
+		$word   = '/(^|[\s\-(,\'’:\/])' . preg_quote( $needle, '/' ) . '/u';
+		$ranked = array();
+
+		foreach ( array_values( $rows ) as $index => $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
+			$title = mb_strtolower( (string) ( $row['titleTranslated'] ?? $row['title'] ?? $row['name'] ?? '' ) );
+			$city  = mb_strtolower( (string) ( $row['cityName'] ?? $row['city'] ?? '' ) );
+
+			if ( 0 === strpos( $title, $needle ) || 0 === strpos( $city, $needle ) ) {
+				$score = 0;
+			} elseif ( preg_match( $word, $title ) || preg_match( $word, $city ) ) {
+				$score = 1;
+			} else {
+				$score = 2;
+			}
+
+			$ranked[] = array( $score, $index, $row );
+		}
+
+		usort(
+			$ranked,
+			static function ( $a, $b ) {
+				return $a[0] <=> $b[0] ?: $a[1] <=> $b[1];
+			}
+		);
+
+		return array_column( $ranked, 2 );
 	}
 
 	/**
