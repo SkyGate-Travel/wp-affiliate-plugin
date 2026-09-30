@@ -278,6 +278,15 @@ class Sky_Aff_Shortcode {
 			'direct'            => __( 'Direct', 'sky-affiliate-search' ),
 			'typeToSearch'      => __( 'Type at least 2 characters…', 'sky-affiliate-search' ),
 			'noPlaces'          => __( 'No matching places.', 'sky-affiliate-search' ),
+			// The activity keyword field's live suggestions.
+			'suggestPlaces'     => __( 'Destinations', 'sky-affiliate-search' ),
+			'suggestCategories' => __( 'Categories', 'sky-affiliate-search' ),
+			'browseCategories'  => __( 'Browse by category', 'sky-affiliate-search' ),
+			'allOfCountry'      => __( 'Everywhere in this country', 'sky-affiliate-search' ),
+			'findingActivities' => __( 'Finding activities…', 'sky-affiliate-search' ),
+			'noActivityMatches' => __( 'No activity names match — try searching anyway.', 'sky-affiliate-search' ),
+			/* translators: %s: the words the visitor typed. */
+			'searchFor'         => __( 'Search for “%s”', 'sky-affiliate-search' ),
 			'allAirports'       => __( 'all airports', 'sky-affiliate-search' ),
 			// Both sides of a flight search are chosen from a list, so the only
 			// ways to get them wrong are to leave one empty or to pick the same

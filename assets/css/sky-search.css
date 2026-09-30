@@ -1,24 +1,97 @@
 /**
  * Sky Affiliate Search — front-end styles.
  *
- * Scoped under .sky-aff so the widget cannot leak into a host theme, and
- * built from tokens so a theme's own colours mostly show through. The accent
- * is injected as an inline custom property from the plugin settings.
+ * Glass on colour. The widget brings its own backdrop — soft orbs of the
+ * accent and three companion hues — because frosted panels only read as
+ * glass when there is something behind them to frost, and a host page is
+ * usually plain white. Everything is scoped under .sky-aff so none of it
+ * leaks into the theme.
+ *
+ * The accent is injected as an inline custom property from the plugin
+ * settings; the companion hues are mixed from it, so a site that picks green
+ * gets a green-led palette rather than blue orbs behind a green button.
+ *
+ * .sky-aff--dark is set by the script when the page under the widget is dark,
+ * so a dark theme gets smoked glass instead of a bright slab.
  */
 
 .sky-aff {
 	--sky-aff-accent: #0f62fe;
-	--sky-aff-fg: currentColor;
-	--sky-aff-muted: color-mix( in srgb, currentColor 60%, transparent );
-	--sky-aff-line: color-mix( in srgb, currentColor 15%, transparent );
-	--sky-aff-surface: color-mix( in srgb, currentColor 3%, transparent );
-	--sky-aff-radius: 10px;
-	--sky-aff-gap: 12px;
+	--sky-aff-accent-2: color-mix( in srgb, var(--sky-aff-accent) 45%, #a855f7 );
+	--sky-aff-accent-3: color-mix( in srgb, var(--sky-aff-accent) 25%, #ec4899 );
+	--sky-aff-accent-4: color-mix( in srgb, var(--sky-aff-accent) 30%, #06b6d4 );
+	--sky-aff-grad: linear-gradient( 135deg, var(--sky-aff-accent), var(--sky-aff-accent-2) );
 
+	--sky-aff-ink: #0f172a;
+	--sky-aff-fg: var(--sky-aff-ink);
+	--sky-aff-muted: #56627a;
+	--sky-aff-line: rgba( 15, 23, 42, .09 );
+	--sky-aff-base: #f6f7fe;
+	--sky-aff-wash: linear-gradient( 135deg, #eef2ff, #fdf4ff 50%, #ecfeff );
+	--sky-aff-glass: rgba( 255, 255, 255, .55 );
+	--sky-aff-glass-strong: rgba( 255, 255, 255, .88 );
+	--sky-aff-menu: rgba( 255, 255, 255, .96 );
+	--sky-aff-glass-border: rgba( 255, 255, 255, .75 );
+	--sky-aff-glass-edge: inset 0 1px 0 rgba( 255, 255, 255, .8 );
+	--sky-aff-field: rgba( 255, 255, 255, .7 );
+	--sky-aff-field-border: rgba( 15, 23, 42, .08 );
+	--sky-aff-tint: color-mix( in srgb, var(--sky-aff-accent) 10%, transparent );
+	--sky-aff-shadow: 0 30px 60px -30px color-mix( in srgb, var(--sky-aff-accent) 45%, rgba( 15, 23, 42, .5 ) );
+	--sky-aff-shadow-sm: 0 12px 28px -18px rgba( 15, 23, 42, .35 );
+	--sky-aff-blur: blur( 22px ) saturate( 180% );
+	--sky-aff-surface: var(--sky-aff-glass);
+	--sky-aff-radius: 20px;
+	--sky-aff-gap: 14px;
+	--sky-aff-error: #c0262d;
+
+	position: relative;
+	isolation: isolate;
 	box-sizing: border-box;
 	container-type: inline-size;
+	padding: clamp( 14px, 3vw, 32px );
+	border-radius: 32px;
+	background: var(--sky-aff-base);
+	color: var(--sky-aff-ink);
 	font-size: 15px;
 	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+}
+
+/*
+ * The backdrop. Orbs are radial gradients on a pseudo-element rather than
+ * blurred child elements, so they stay inside the rounded corners without the
+ * root clipping its overflow — which would cut off the suggestion dropdowns.
+ */
+.sky-aff::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	background:
+		radial-gradient( 55% 60% at 6% 4%, color-mix( in srgb, var(--sky-aff-accent) 62%, transparent ), transparent 72% ),
+		radial-gradient( 50% 56% at 98% 2%, color-mix( in srgb, var(--sky-aff-accent-3) 58%, transparent ), transparent 72% ),
+		radial-gradient( 55% 60% at 90% 96%, color-mix( in srgb, var(--sky-aff-accent-4) 60%, transparent ), transparent 72% ),
+		radial-gradient( 50% 56% at 4% 98%, color-mix( in srgb, var(--sky-aff-accent-2) 55%, transparent ), transparent 72% ),
+		var(--sky-aff-wash);
+	background-size: 140% 140%;
+	background-position: 0% 0%;
+	animation: sky-aff-drift 22s ease-in-out infinite alternate;
+	pointer-events: none;
+}
+
+@keyframes sky-aff-drift {
+	0% {
+		background-position: 0% 0%;
+	}
+
+	50% {
+		background-position: 60% 30%;
+	}
+
+	100% {
+		background-position: 100% 100%;
+	}
 }
 
 .sky-aff *,
@@ -40,8 +113,12 @@
 }
 
 .sky-aff__title {
-	margin: 0 0 var(--sky-aff-gap);
-	font-size: 1.4em;
+	margin: 0 0 16px;
+	font-size: 1.6em;
+	font-weight: 800;
+	letter-spacing: -.02em;
+	line-height: 1.2;
+	color: var(--sky-aff-ink);
 }
 
 /* --------------------------------------------------------------------- tabs */
@@ -50,30 +127,47 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px;
-	margin-bottom: var(--sky-aff-gap);
-	border-bottom: 1px solid var(--sky-aff-line);
+	width: fit-content;
+	max-width: 100%;
+	margin-bottom: 16px;
+	padding: 5px;
+	border: 1px solid var(--sky-aff-glass-border);
+	border-radius: 999px;
+	background: var(--sky-aff-glass);
+	-webkit-backdrop-filter: var(--sky-aff-blur);
+	backdrop-filter: var(--sky-aff-blur);
+	box-shadow: var(--sky-aff-shadow-sm), var(--sky-aff-glass-edge);
 }
 
 .sky-aff__tab {
 	appearance: none;
-	background: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 18px;
 	border: 0;
-	border-bottom: 2px solid transparent;
-	padding: 10px 16px;
+	border-radius: 999px;
+	background: none;
 	font: inherit;
+	font-weight: 600;
 	color: var(--sky-aff-muted);
 	cursor: pointer;
-	transition: color .15s, border-color .15s;
+	transition: color .2s, background-color .2s, box-shadow .2s, transform .2s;
+}
+
+.sky-aff__tab-icon {
+	display: inline-flex;
 }
 
 .sky-aff__tab:hover {
-	color: var(--sky-aff-fg);
+	color: var(--sky-aff-ink);
+	background: var(--sky-aff-tint);
 }
 
 .sky-aff__tab.is-active {
-	color: var(--sky-aff-accent);
-	border-bottom-color: var(--sky-aff-accent);
-	font-weight: 600;
+	color: #fff;
+	background: var(--sky-aff-grad);
+	box-shadow: 0 10px 22px -10px var(--sky-aff-accent);
 }
 
 .sky-aff__tab:focus-visible {
@@ -81,16 +175,39 @@
 	outline-offset: 2px;
 }
 
+/* On a narrow column the tabs share the row evenly instead of wrapping. */
+@container ( max-width: 480px ) {
+	.sky-aff__tabs {
+		width: 100%;
+		flex-wrap: nowrap;
+	}
+
+	.sky-aff__tab {
+		flex: 1 1 0;
+		flex-direction: column;
+		gap: 2px;
+		padding: 8px 4px;
+		font-size: .8em;
+		justify-content: center;
+		border-radius: 18px;
+	}
+}
+
 /* -------------------------------------------------------------------- forms */
 
 .sky-aff__form {
+	position: relative;
+	z-index: 3;
 	display: flex;
 	flex-direction: column;
-	gap: var(--sky-aff-gap);
-	padding: 16px;
-	border: 1px solid var(--sky-aff-line);
-	border-radius: var(--sky-aff-radius);
-	background: var(--sky-aff-surface);
+	gap: 16px;
+	padding: clamp( 16px, 2.6vw, 24px );
+	border: 1px solid var(--sky-aff-glass-border);
+	border-radius: 24px;
+	background: var(--sky-aff-glass);
+	-webkit-backdrop-filter: var(--sky-aff-blur);
+	backdrop-filter: var(--sky-aff-blur);
+	box-shadow: var(--sky-aff-shadow), var(--sky-aff-glass-edge);
 }
 
 .sky-aff__row {
@@ -104,7 +221,7 @@
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 6px;
 	min-width: 140px;
 	flex: 1 1 160px;
 }
@@ -114,7 +231,7 @@
 }
 
 .sky-aff__field--narrow {
-	flex: 0 0 100px;
+	flex: 0 0 104px;
 	min-width: 90px;
 }
 
@@ -124,77 +241,175 @@
 }
 
 .sky-aff__field > label {
-	font-size: .82em;
-	font-weight: 600;
+	padding-inline-start: 4px;
+	font-size: .74em;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
 	color: var(--sky-aff-muted);
 }
 
 .sky-aff__field input,
 .sky-aff__field select {
 	width: 100%;
-	padding: 9px 11px;
+	height: 50px;
+	margin: 0;
+	padding: 0 16px;
 	font: inherit;
-	color: inherit;
-	background: Canvas;
-	border: 1px solid var(--sky-aff-line);
-	border-radius: 8px;
+	color: var(--sky-aff-ink);
+	background-color: var(--sky-aff-field);
+	border: 1px solid var(--sky-aff-field-border);
+	border-radius: 14px;
+	box-shadow: 0 1px 2px rgba( 15, 23, 42, .04 );
+	color-scheme: light;
+	transition: border-color .2s, box-shadow .2s, background-color .2s;
+}
+
+.sky-aff__field input::placeholder {
+	color: color-mix( in srgb, var(--sky-aff-muted) 75%, transparent );
+}
+
+.sky-aff__field input:hover,
+.sky-aff__field select:hover {
+	border-color: color-mix( in srgb, var(--sky-aff-accent) 30%, var(--sky-aff-field-border) );
 }
 
 .sky-aff__field input:focus,
 .sky-aff__field select:focus {
-	outline: 2px solid var(--sky-aff-accent);
-	outline-offset: 1px;
-	border-color: transparent;
+	outline: none;
+	border-color: var(--sky-aff-accent);
+	background-color: var(--sky-aff-glass-strong);
+	box-shadow: 0 0 0 4px color-mix( in srgb, var(--sky-aff-accent) 20%, transparent );
+}
+
+/* A chevron that follows the text direction, in place of the native arrow. */
+.sky-aff__field select {
+	appearance: none;
+	padding-inline-end: 40px;
+	background-image: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356627a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E" );
+	background-repeat: no-repeat;
+	background-position: right 14px center;
+	background-size: 16px;
+	cursor: pointer;
+	text-overflow: ellipsis;
+}
+
+.sky-aff[dir="rtl"] .sky-aff__field select {
+	background-position: left 14px center;
+}
+
+/* The keyword boxes carry a magnifier, so they read as search at a glance. */
+.sky-aff__field input[type="search"] {
+	padding-inline-start: 46px;
+	background-image: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356627a' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E" );
+	background-repeat: no-repeat;
+	background-position: left 16px center;
+	background-size: 18px;
+}
+
+.sky-aff[dir="rtl"] .sky-aff__field input[type="search"] {
+	background-position: right 16px center;
+}
+
+.sky-aff__field input[type="number"] {
+	padding-inline-end: 8px;
 }
 
 .sky-aff__submit,
 .sky-aff__secondary,
 .sky-aff__cta {
 	appearance: none;
-	display: inline-block;
-	padding: 10px 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 0 22px;
 	font: inherit;
-	font-weight: 600;
-	border-radius: 8px;
+	font-weight: 700;
+	border-radius: 14px;
 	border: 1px solid transparent;
 	cursor: pointer;
 	text-decoration: none;
 	text-align: center;
-	transition: filter .15s, background-color .15s;
+	white-space: nowrap;
+	transition: transform .2s, box-shadow .2s, filter .2s, background-color .2s;
 }
 
-.sky-aff__submit,
-.sky-aff__cta {
-	background: var(--sky-aff-accent);
+.sky-aff__submit {
+	height: 50px;
+	min-width: 132px;
+	padding: 0 28px;
 	color: #fff;
+	background: var(--sky-aff-grad);
+	box-shadow: 0 14px 28px -14px var(--sky-aff-accent), inset 0 1px 0 rgba( 255, 255, 255, .25 );
+}
+
+.sky-aff__submit::before {
+	content: '';
+	width: 18px;
+	height: 18px;
+	flex: 0 0 auto;
+	background: currentColor;
+	-webkit-mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E" ) center / contain no-repeat;
+	mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E" ) center / contain no-repeat;
 }
 
 .sky-aff__submit:hover:not(:disabled),
 .sky-aff__cta:hover {
-	filter: brightness( 1.08 );
+	transform: translateY( -1px );
+	filter: brightness( 1.06 ) saturate( 1.1 );
+	box-shadow: 0 18px 32px -14px var(--sky-aff-accent), inset 0 1px 0 rgba( 255, 255, 255, .25 );
+}
+
+.sky-aff__submit:active:not(:disabled),
+.sky-aff__cta:active {
+	transform: translateY( 0 );
+}
+
+.sky-aff__submit:focus-visible,
+.sky-aff__cta:focus-visible,
+.sky-aff__secondary:focus-visible {
+	outline: 2px solid var(--sky-aff-accent);
+	outline-offset: 3px;
 }
 
 .sky-aff__submit:disabled {
-	opacity: .6;
+	opacity: .7;
 	cursor: progress;
 }
 
 .sky-aff__secondary {
-	background: transparent;
-	border-color: var(--sky-aff-line);
-	color: inherit;
+	height: 46px;
+	padding: 0 26px;
+	color: var(--sky-aff-ink);
+	background: var(--sky-aff-glass);
+	border-color: var(--sky-aff-glass-border);
+	-webkit-backdrop-filter: var(--sky-aff-blur);
+	backdrop-filter: var(--sky-aff-blur);
+	box-shadow: var(--sky-aff-shadow-sm), var(--sky-aff-glass-edge);
+}
+
+.sky-aff__secondary:hover {
+	background: var(--sky-aff-glass-strong);
+	transform: translateY( -1px );
 }
 
 .sky-aff__link-btn {
 	appearance: none;
+	align-self: flex-start;
 	background: none;
 	border: 0;
-	padding: 2px 4px;
+	padding: 4px 6px;
 	font: inherit;
 	font-size: .88em;
+	font-weight: 600;
 	color: var(--sky-aff-accent);
 	cursor: pointer;
-	text-decoration: underline;
+	border-radius: 8px;
+}
+
+.sky-aff__link-btn:hover {
+	background: var(--sky-aff-tint);
 }
 
 /* Trip-type pills */
@@ -212,17 +427,26 @@
 
 .sky-aff__pill span {
 	display: inline-block;
-	padding: 5px 14px;
-	border: 1px solid var(--sky-aff-line);
+	padding: 7px 16px;
+	border: 1px solid var(--sky-aff-field-border);
 	border-radius: 999px;
+	background: var(--sky-aff-field);
 	font-size: .88em;
+	font-weight: 600;
+	color: var(--sky-aff-muted);
 	cursor: pointer;
+	transition: background-color .2s, color .2s, box-shadow .2s;
+}
+
+.sky-aff__pill span:hover {
+	color: var(--sky-aff-ink);
 }
 
 .sky-aff__pill input:checked + span {
-	background: var(--sky-aff-accent);
-	border-color: var(--sky-aff-accent);
+	background: var(--sky-aff-grad);
+	border-color: transparent;
 	color: #fff;
+	box-shadow: 0 8px 18px -10px var(--sky-aff-accent);
 }
 
 .sky-aff__pill input:focus-visible + span {
@@ -233,40 +457,50 @@
 .sky-aff__swap {
 	appearance: none;
 	align-self: flex-end;
-	margin-bottom: 4px;
-	width: 34px;
-	height: 34px;
+	margin-bottom: 7px;
+	width: 36px;
+	height: 36px;
 	flex: 0 0 auto;
-	border: 1px solid var(--sky-aff-line);
+	border: 1px solid var(--sky-aff-glass-border);
 	border-radius: 50%;
-	background: Canvas;
-	color: inherit;
+	background: var(--sky-aff-glass-strong);
+	color: var(--sky-aff-accent);
 	font-size: 16px;
+	font-weight: 700;
 	cursor: pointer;
+	box-shadow: var(--sky-aff-shadow-sm);
+	transition: transform .3s, background-color .2s;
+}
+
+.sky-aff__swap:hover {
+	transform: rotate( 180deg );
 }
 
 /* Rooms */
 
 .sky-aff__rooms {
 	margin: 0;
-	padding: 12px;
-	border: 1px dashed var(--sky-aff-line);
-	border-radius: 8px;
+	padding: 12px 16px 10px;
+	border: 1px solid var(--sky-aff-field-border);
+	border-radius: 16px;
+	background: color-mix( in srgb, var(--sky-aff-field) 60%, transparent );
 }
 
 .sky-aff__rooms legend {
 	padding: 0 6px;
-	font-size: .82em;
-	font-weight: 600;
+	font-size: .74em;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
 	color: var(--sky-aff-muted);
 }
 
 .sky-aff__room {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 10px;
+	gap: 12px;
 	align-items: center;
-	padding: 6px 0;
+	padding: 8px 0;
 }
 
 .sky-aff__room + .sky-aff__room {
@@ -275,29 +509,38 @@
 
 .sky-aff__room-label {
 	font-size: .85em;
-	font-weight: 600;
+	font-weight: 700;
 	min-width: 60px;
 }
 
 .sky-aff__room-field {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 6px;
 	font-size: .85em;
+	color: var(--sky-aff-muted);
 }
 
 .sky-aff__room-field input {
-	width: 62px;
-	padding: 5px 7px;
+	width: 64px;
+	height: 36px;
+	padding: 0 8px;
 	font: inherit;
-	color: inherit;
-	background: Canvas;
-	border: 1px solid var(--sky-aff-line);
-	border-radius: 6px;
+	color: var(--sky-aff-ink);
+	background: var(--sky-aff-field);
+	border: 1px solid var(--sky-aff-field-border);
+	border-radius: 10px;
+	color-scheme: light;
+}
+
+.sky-aff__room-field input:focus {
+	outline: none;
+	border-color: var(--sky-aff-accent);
+	box-shadow: 0 0 0 3px color-mix( in srgb, var(--sky-aff-accent) 20%, transparent );
 }
 
 .sky-aff__room-field--age input {
-	width: 52px;
+	width: 54px;
 }
 
 /* --------------------------------------------------------------- typeahead */
@@ -307,62 +550,196 @@
 	inset-inline: 0;
 	top: 100%;
 	z-index: 40;
-	margin: 4px 0 0;
-	padding: 4px;
-	max-height: 280px;
+	margin: 8px 0 0;
+	padding: 6px;
+	max-height: 300px;
 	overflow-y: auto;
+	overscroll-behavior: contain;
 	list-style: none;
-	background: Canvas;
-	border: 1px solid var(--sky-aff-line);
-	border-radius: 8px;
-	box-shadow: 0 8px 24px rgba( 0, 0, 0, .12 );
+	color: var(--sky-aff-ink);
+	/* Near-opaque: a dropdown sits over the form's own labels, and letters
+	   ghosting through behind the options are harder to read than glass is
+	   worth. The blur and the edge still make it read as the same material. */
+	background: var(--sky-aff-menu);
+	-webkit-backdrop-filter: var(--sky-aff-blur);
+	backdrop-filter: var(--sky-aff-blur);
+	border: 1px solid var(--sky-aff-glass-border);
+	border-radius: 18px;
+	box-shadow: 0 24px 48px -20px rgba( 15, 23, 42, .45 ), var(--sky-aff-glass-edge);
+	animation: sky-aff-pop .16s ease-out;
+}
+
+@keyframes sky-aff-pop {
+	from {
+		opacity: 0;
+		transform: translateY( -4px );
+	}
+}
+
+.sky-aff__suggest--rich {
+	max-height: min( 460px, 70vh );
 }
 
 .sky-aff__suggest-item {
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
-	padding: 8px 10px;
-	border-radius: 6px;
+	padding: 9px 12px;
+	border-radius: 12px;
 	cursor: pointer;
 	font-size: .92em;
+	color: inherit;
+	text-decoration: none;
+	transition: background-color .12s;
+}
+
+/* Rows with an icon or a picture: icon, two lines of text, then the price. */
+.sky-aff__suggest-item:has( > .sky-aff__suggest-icon ),
+.sky-aff__suggest-item--activity {
+	flex-direction: row;
+	align-items: center;
+	gap: 12px;
+}
+
+.sky-aff__suggest-icon {
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 auto;
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
+	color: var(--sky-aff-accent);
+	background: var(--sky-aff-tint);
+}
+
+.sky-aff__suggest-thumb {
+	flex: 0 0 auto;
+	width: 52px;
+	height: 52px;
+	overflow: hidden;
+	border-radius: 12px;
+	background: linear-gradient( 135deg, var(--sky-aff-tint), color-mix( in srgb, var(--sky-aff-accent-3) 18%, transparent ) );
+}
+
+.sky-aff__suggest-thumb img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.sky-aff__suggest-text {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
 }
 
 .sky-aff__suggest-main {
 	line-height: 1.3;
+	font-weight: 600;
+}
+
+.sky-aff__suggest-item--activity .sky-aff__suggest-main {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 }
 
 .sky-aff__suggest-sub {
-	font-size: .82em;
+	font-size: .84em;
 	color: var(--sky-aff-muted);
 	line-height: 1.3;
 }
 
+.sky-aff__suggest-aside {
+	flex: 0 0 auto;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: .85em;
+	font-weight: 700;
+	color: var(--sky-aff-accent);
+	background: var(--sky-aff-tint);
+	white-space: nowrap;
+}
+
 .sky-aff__suggest-item:hover,
 .sky-aff__suggest-item.is-active {
-	background: color-mix( in srgb, var(--sky-aff-accent) 12%, transparent );
+	background: color-mix( in srgb, var(--sky-aff-accent) 11%, transparent );
+}
+
+.sky-aff__suggest-item.is-active {
+	box-shadow: inset 0 0 0 1px color-mix( in srgb, var(--sky-aff-accent) 35%, transparent );
+}
+
+.sky-aff__suggest-item--all {
+	margin-top: 4px;
+	color: var(--sky-aff-accent);
+	border-top: 1px solid var(--sky-aff-line);
+	border-radius: 0 0 12px 12px;
+}
+
+.sky-aff__suggest-item--all .sky-aff__suggest-icon {
+	color: #fff;
+	background: var(--sky-aff-grad);
+}
+
+.sky-aff__suggest-group {
+	padding: 10px 12px 4px;
+	font-size: .7em;
+	font-weight: 700;
+	letter-spacing: .08em;
+	text-transform: uppercase;
+	color: var(--sky-aff-muted);
 }
 
 .sky-aff__suggest-empty {
-	padding: 8px 10px;
+	padding: 9px 12px;
 	font-size: .9em;
 	color: var(--sky-aff-muted);
+}
+
+.sky-aff__suggest-loading::before {
+	content: '';
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	margin-inline-end: 8px;
+	vertical-align: -1px;
+	border: 2px solid var(--sky-aff-tint);
+	border-top-color: var(--sky-aff-accent);
+	border-radius: 50%;
+	animation: sky-aff-spin .7s linear infinite;
+}
+
+@keyframes sky-aff-spin {
+	to {
+		transform: rotate( 360deg );
+	}
 }
 
 /* ------------------------------------------------------------------ filters */
 
 .sky-aff__filters {
+	position: relative;
+	z-index: 2;
 	margin-top: var(--sky-aff-gap);
-	border: 1px solid var(--sky-aff-line);
-	border-radius: 8px;
+	border: 1px solid var(--sky-aff-glass-border);
+	border-radius: 18px;
+	background: var(--sky-aff-glass);
+	-webkit-backdrop-filter: var(--sky-aff-blur);
+	backdrop-filter: var(--sky-aff-blur);
+	box-shadow: var(--sky-aff-shadow-sm), var(--sky-aff-glass-edge);
 }
 
 .sky-aff__filters-head {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 10px 14px;
-	font-weight: 600;
+	padding: 12px 18px;
+	font-weight: 700;
 	cursor: pointer;
 	list-style: none;
 	user-select: none;
@@ -381,7 +758,7 @@
 	border-right: 2px solid currentColor;
 	border-bottom: 2px solid currentColor;
 	transform: rotate( 45deg ) translate( -2px, -2px );
-	transition: transform .15s;
+	transition: transform .2s;
 }
 
 .sky-aff__filters[open] > .sky-aff__filters-head::after {
@@ -391,53 +768,79 @@
 .sky-aff__filters-head:focus-visible {
 	outline: 2px solid var(--sky-aff-accent);
 	outline-offset: -2px;
-	border-radius: 8px;
+	border-radius: 18px;
 }
 
 .sky-aff__filters-count {
 	display: inline-grid;
 	place-items: center;
-	min-width: 1.5em;
-	height: 1.5em;
-	padding: 0 5px;
+	min-width: 1.6em;
+	height: 1.6em;
+	padding: 0 6px;
 	border-radius: 999px;
-	background: var(--sky-aff-accent);
+	background: var(--sky-aff-grad);
 	color: #fff;
-	font-size: .78em;
+	font-size: .76em;
 	font-variant-numeric: tabular-nums;
 }
 
 .sky-aff__filters-foot {
-	padding: 0 14px 12px;
+	padding: 0 18px 14px;
+}
+
+/* Facet groups stack; each is a label plus its own row of chips. */
+.sky-aff__filters-body {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	/* Even collapsed-by-default, an open panel with twenty groups should
+	   scroll inside itself rather than push the results off the page. */
+	max-height: 340px;
+	overflow-y: auto;
+	padding: 4px 18px 14px;
 }
 
 .sky-aff__filter-group {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: center;
+	align-items: baseline;
 	gap: 8px;
 }
 
 .sky-aff__filter-label {
+	flex: 0 0 auto;
+	min-width: 8em;
 	font-size: .85em;
-	font-weight: 600;
+	font-weight: 700;
 	color: var(--sky-aff-muted);
 }
 
 .sky-aff__chip {
 	display: inline-flex;
 	align-items: center;
-	gap: 5px;
-	padding: 4px 10px;
-	border: 1px solid var(--sky-aff-line);
+	gap: 6px;
+	padding: 5px 12px;
+	border: 1px solid var(--sky-aff-field-border);
 	border-radius: 999px;
+	background: var(--sky-aff-field);
 	font-size: .85em;
 	cursor: pointer;
+	transition: background-color .15s, border-color .15s;
+}
+
+.sky-aff__chip:hover {
+	border-color: color-mix( in srgb, var(--sky-aff-accent) 35%, transparent );
 }
 
 .sky-aff__chip:has( input:checked ) {
-	background: color-mix( in srgb, var(--sky-aff-accent) 14%, transparent );
+	background: color-mix( in srgb, var(--sky-aff-accent) 14%, var(--sky-aff-field) );
 	border-color: var(--sky-aff-accent);
+	color: var(--sky-aff-accent);
+	font-weight: 600;
+}
+
+.sky-aff__chip input {
+	accent-color: var(--sky-aff-accent);
 }
 
 .sky-aff__chip-count {
@@ -446,53 +849,33 @@
 	font-variant-numeric: tabular-nums;
 }
 
-/* Facet groups stack; each is a label plus its own row of chips. */
-.sky-aff__filters-body {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	/* Even collapsed-by-default, an open panel with twenty groups should
-	   scroll inside itself rather than push the results off the page. */
-	max-height: 340px;
-	overflow-y: auto;
-	padding: 4px 14px 12px;
-}
-
-.sky-aff__filter-group {
-	align-items: baseline;
-}
-
-.sky-aff__filter-label {
-	flex: 0 0 auto;
-	min-width: 8em;
-}
-
 /* ------------------------------------------------------------------ results */
 
 .sky-aff__status {
-	margin: var(--sky-aff-gap) 0 8px;
+	margin: 18px 4px 10px;
 	font-size: .9em;
+	font-weight: 500;
 	color: var(--sky-aff-muted);
 	min-height: 1.4em;
 }
 
 .sky-aff__status.is-error {
-	color: #b3261e;
+	color: var(--sky-aff-error);
 }
 
 .sky-aff__results {
 	display: grid;
-	gap: var(--sky-aff-gap);
+	gap: 16px;
 	grid-template-columns: 1fr;
 }
 
-@container ( min-width: 640px ) {
+@container ( min-width: 540px ) {
 	.sky-aff__results {
 		grid-template-columns: repeat( 2, minmax( 0, 1fr ) );
 	}
 }
 
-@container ( min-width: 960px ) {
+@container ( min-width: 900px ) {
 	.sky-aff__results {
 		grid-template-columns: repeat( 3, minmax( 0, 1fr ) );
 	}
@@ -504,20 +887,29 @@
 }
 
 .sky-aff__card {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	border: 1px solid var(--sky-aff-line);
+	border: 1px solid var(--sky-aff-glass-border);
 	border-radius: var(--sky-aff-radius);
-	background: var(--sky-aff-surface);
-	transition: border-color .15s, box-shadow .15s;
+	background: color-mix( in srgb, var(--sky-aff-glass-strong) 80%, transparent );
+	box-shadow: var(--sky-aff-shadow-sm), var(--sky-aff-glass-edge);
+	transition: transform .25s, box-shadow .25s, border-color .25s;
+	animation: sky-aff-rise .35s ease-out both;
 }
 
-/* Enough to say "this row is a thing you can click", and no more: the widget
-   sits inside someone else's design. */
+@keyframes sky-aff-rise {
+	from {
+		opacity: 0;
+		transform: translateY( 8px );
+	}
+}
+
 .sky-aff__card:hover {
-	border-color: color-mix( in srgb, var(--sky-aff-accent) 35%, var(--sky-aff-line) );
-	box-shadow: 0 6px 18px -12px rgba( 0, 0, 0, .4 );
+	transform: translateY( -3px );
+	border-color: color-mix( in srgb, var(--sky-aff-accent) 30%, var(--sky-aff-glass-border) );
+	box-shadow: var(--sky-aff-shadow), var(--sky-aff-glass-edge);
 }
 
 /*
@@ -530,26 +922,35 @@
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: 12px;
-	padding: 14px 16px;
+	padding: 16px 18px;
+}
+
+.sky-aff__card--flight:hover {
+	transform: translateY( -2px );
 }
 
 @container ( min-width: 720px ) {
 	.sky-aff__card--flight {
-		grid-template-columns: minmax( 150px, 210px ) minmax( 0, 1fr ) minmax( 150px, 200px );
-		align-items: center;
+		grid-template-columns: minmax( 150px, 210px ) minmax( 0, 1fr ) minmax( 160px, 210px );
+		align-items: stretch;
 		gap: 0;
 		padding: 0;
 	}
 
 	.sky-aff__card--flight > * {
-		padding: 16px;
+		display: flex;
+		padding: 18px;
+	}
+
+	.sky-aff__card--flight > .sky-aff__journey {
+		justify-content: center;
 	}
 }
 
 .sky-aff__carrier {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 12px;
 	min-width: 0;
 }
 
@@ -565,12 +966,13 @@
 	flex: 0 0 auto;
 	align-items: center;
 	justify-content: center;
-	width: 40px;
-	height: 40px;
-	border: 1px solid var(--sky-aff-line);
+	width: 44px;
+	height: 44px;
+	border: 2px solid var(--sky-aff-glass-border);
 	border-radius: 50%;
 	/* Airline marks are drawn for a light ground, whatever the theme is. */
 	background: #fff;
+	box-shadow: 0 4px 10px -4px rgba( 15, 23, 42, .25 );
 }
 
 /* Several carriers on one itinerary overlap, newest behind. */
@@ -580,16 +982,16 @@
 
 .sky-aff__logo img {
 	display: block;
-	width: 78%;
-	height: 78%;
+	width: 76%;
+	height: 76%;
 	object-fit: contain;
 }
 
 .sky-aff__logo--text {
-	background: var(--sky-aff-surface);
-	color: var(--sky-aff-muted);
+	background: var(--sky-aff-tint);
+	color: var(--sky-aff-accent);
 	font-size: .78em;
-	font-weight: 700;
+	font-weight: 800;
 	letter-spacing: .5px;
 }
 
@@ -655,6 +1057,7 @@
 .sky-aff__leg-duration {
 	color: var(--sky-aff-muted);
 	font-size: .78em;
+	font-weight: 600;
 	white-space: nowrap;
 }
 
@@ -670,18 +1073,24 @@
 .sky-aff__leg-rail {
 	position: absolute;
 	inset-inline: 0;
-	height: 1px;
-	background: var(--sky-aff-line);
+	height: 2px;
+	border-radius: 2px;
+	background: linear-gradient( 90deg, var(--sky-aff-line), color-mix( in srgb, var(--sky-aff-accent) 45%, transparent ) );
+}
+
+[dir="rtl"] .sky-aff__leg-rail {
+	background: linear-gradient( 270deg, var(--sky-aff-line), color-mix( in srgb, var(--sky-aff-accent) 45%, transparent ) );
 }
 
 /* One pip per stop, which is the whole story a connection needs here. */
 .sky-aff__leg-stop {
 	position: relative;
-	width: 5px;
-	height: 5px;
+	width: 7px;
+	height: 7px;
 	margin-inline: 3px;
 	border-radius: 50%;
-	background: color-mix( in srgb, currentColor 45%, transparent );
+	background: var(--sky-aff-glass-strong);
+	border: 2px solid var(--sky-aff-accent-3);
 }
 
 .sky-aff__leg-plane {
@@ -713,17 +1122,17 @@
 		align-items: center;
 		justify-content: center;
 		text-align: center;
-		border-inline-start: 1px solid var(--sky-aff-line);
+		border-inline-start: 1px dashed var(--sky-aff-line);
 		background: linear-gradient(
-			to bottom left,
-			color-mix( in srgb, var(--sky-aff-accent) 9%, transparent ),
-			transparent 70%
+			160deg,
+			color-mix( in srgb, var(--sky-aff-accent) 12%, transparent ),
+			color-mix( in srgb, var(--sky-aff-accent-3) 8%, transparent )
 		);
 	}
 }
 
 .sky-aff__card--flight .sky-aff__price {
-	font-size: 1.25em;
+	font-size: 1.35em;
 	line-height: 1.25;
 }
 
@@ -734,30 +1143,45 @@
 }
 
 .sky-aff__seats {
-	color: #b3261e;
+	color: var(--sky-aff-error);
 	font-size: .78em;
-	font-weight: 600;
+	font-weight: 700;
 	white-space: nowrap;
 }
 
 .sky-aff__thumb {
+	position: relative;
 	aspect-ratio: 16 / 10;
 	overflow: hidden;
-	background: var(--sky-aff-line);
+	background: linear-gradient( 135deg, var(--sky-aff-tint), color-mix( in srgb, var(--sky-aff-accent-3) 16%, transparent ) );
+}
+
+.sky-aff__thumb::after {
+	content: '';
+	position: absolute;
+	inset: auto 0 0;
+	height: 40%;
+	background: linear-gradient( to top, rgba( 15, 23, 42, .28 ), transparent );
+	pointer-events: none;
 }
 
 .sky-aff__thumb img {
+	display: block;
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	display: block;
+	transition: transform .6s ease;
+}
+
+.sky-aff__card:hover .sky-aff__thumb img {
+	transform: scale( 1.06 );
 }
 
 .sky-aff__card-body {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
-	padding: 14px 16px;
+	padding: 16px 18px 18px;
 	flex: 1;
 }
 
@@ -769,14 +1193,28 @@
 }
 
 .sky-aff__card-title {
-	font-weight: 600;
-	line-height: 1.3;
+	font-weight: 700;
+	line-height: 1.35;
+	color: var(--sky-aff-ink);
 }
 
 .sky-aff__card-sub {
 	margin: 0;
 	font-size: .88em;
 	color: var(--sky-aff-muted);
+}
+
+.sky-aff__card--activity .sky-aff__card-sub::before,
+.sky-aff__card--tour .sky-aff__card-sub::before {
+	content: '';
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	margin-inline-end: 5px;
+	vertical-align: -1px;
+	background: currentColor;
+	-webkit-mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E" ) center / contain no-repeat;
+	mask: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E" ) center / contain no-repeat;
 }
 
 .sky-aff__stars {
@@ -788,27 +1226,30 @@
 .sky-aff__badge {
 	display: inline-block;
 	align-self: flex-start;
-	padding: 2px 8px;
+	padding: 3px 10px;
 	border-radius: 999px;
-	font-size: .78em;
-	background: color-mix( in srgb, currentColor 10%, transparent );
+	font-size: .76em;
+	font-weight: 600;
+	background: var(--sky-aff-tint);
+	color: var(--sky-aff-ink);
 }
 
 .sky-aff__badge--good {
-	color: #1a7f37;
-	background: color-mix( in srgb, #1a7f37 12%, transparent );
+	color: #0f7a3d;
+	background: color-mix( in srgb, #16a34a 14%, transparent );
 }
 
 .sky-aff__time {
-	font-size: 1.15em;
-	font-weight: 600;
+	font-size: 1.2em;
+	font-weight: 800;
 	font-variant-numeric: tabular-nums;
+	letter-spacing: -.01em;
 }
 
 .sky-aff__dayshift {
 	font-size: .7em;
 	font-weight: 700;
-	color: var(--sky-aff-accent);
+	color: var(--sky-aff-accent-3);
 	vertical-align: super;
 }
 
@@ -824,60 +1265,100 @@
 
 .sky-aff__score {
 	display: inline-block;
-	padding: 1px 7px;
-	border-radius: 5px;
-	background: var(--sky-aff-accent);
+	padding: 2px 8px;
+	border-radius: 8px;
+	background: var(--sky-aff-grad);
 	color: #fff;
+	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 }
 
 .sky-aff__card-foot {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
 	margin-top: auto;
-	padding-top: 8px;
+	padding-top: 12px;
+	border-top: 1px dashed var(--sky-aff-line);
 }
 
 .sky-aff__price {
-	font-weight: 700;
-	font-size: 1.05em;
-	color: var(--sky-aff-accent);
+	font-weight: 800;
+	font-size: 1.1em;
 	white-space: nowrap;
+	color: var(--sky-aff-accent);
+	letter-spacing: -.01em;
 }
 
 .sky-aff__price-note {
 	display: block;
 	color: var(--sky-aff-muted);
-	font-size: .68em;
-	font-weight: 400;
+	font-size: .66em;
+	font-weight: 500;
+	letter-spacing: 0;
 }
 
 .sky-aff__cta {
-	padding: 8px 16px;
-	font-size: .9em;
-	white-space: nowrap;
+	height: 40px;
+	padding: 0 18px;
+	font-size: .88em;
+	border-radius: 12px;
+	color: #fff;
+	background: var(--sky-aff-grad);
+	box-shadow: 0 10px 20px -12px var(--sky-aff-accent);
+}
+
+.sky-aff__cta::after {
+	content: '→';
+	transition: transform .2s;
+}
+
+[dir="rtl"] .sky-aff__cta::after {
+	content: '←';
+}
+
+.sky-aff__cta:hover::after {
+	transform: translateX( 3px );
+}
+
+[dir="rtl"] .sky-aff__cta:hover::after {
+	transform: translateX( -3px );
 }
 
 .sky-aff__more {
-	margin-top: var(--sky-aff-gap);
+	margin-top: 20px;
 	text-align: center;
 }
 
 .sky-aff__all {
-	margin: var(--sky-aff-gap) 0 0;
+	margin: 16px 0 0;
 	text-align: center;
 }
 
 .sky-aff__seeall {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 16px;
+	border-radius: 999px;
 	color: var(--sky-aff-accent);
-	font-weight: 600;
+	font-weight: 700;
+	text-decoration: none;
+	background: var(--sky-aff-glass);
+	border: 1px solid var(--sky-aff-glass-border);
+	transition: background-color .2s;
+}
+
+.sky-aff__seeall:hover {
+	background: var(--sky-aff-glass-strong);
 }
 
 .sky-aff__disclosure {
-	margin: 16px 0 0;
-	font-size: .8em;
+	margin: 20px 0 0;
+	font-size: .78em;
+	text-align: center;
 	color: var(--sky-aff-muted);
 }
 
@@ -885,7 +1366,7 @@
 .sky-aff-notice {
 	padding: 12px 16px;
 	border: 1px solid #f0b849;
-	border-radius: 8px;
+	border-radius: 12px;
 	background: #fcf9e8;
 	color: #2c2c2c;
 }
@@ -906,18 +1387,28 @@
 
 .sky-aff__progress {
 	overflow: hidden;
-	height: 3px;
+	height: 5px;
 	margin: 0 0 var(--sky-aff-gap);
-	border-radius: 3px;
-	background: var(--sky-aff-line);
+	border-radius: 5px;
+	background: var(--sky-aff-glass);
+	box-shadow: inset 0 0 0 1px var(--sky-aff-glass-border);
 }
 
 .sky-aff__progress-fill {
 	display: block;
 	width: 0;
 	height: 100%;
-	background: var(--sky-aff-accent);
+	border-radius: inherit;
+	background: linear-gradient( 90deg, var(--sky-aff-accent), var(--sky-aff-accent-2), var(--sky-aff-accent-3) );
+	background-size: 200% 100%;
+	animation: sky-aff-flow 2s linear infinite;
 	transition: width .25s linear;
+}
+
+@keyframes sky-aff-flow {
+	to {
+		background-position: -200% 0;
+	}
 }
 
 /* Results stream in while the search is still running, so they are readable
@@ -929,12 +1420,18 @@
 .sky-aff__skeleton {
 	position: relative;
 	overflow: hidden;
-	min-height: 104px;
-	border-style: dashed;
+	min-height: 120px;
+	animation: none;
+	background: var(--sky-aff-glass);
+}
+
+.sky-aff__skeleton:hover {
+	transform: none;
+	box-shadow: var(--sky-aff-shadow-sm), var(--sky-aff-glass-edge);
 }
 
 .sky-aff__skeleton.sky-aff__card--flight {
-	min-height: 74px;
+	min-height: 84px;
 }
 
 .sky-aff__skeleton::after {
@@ -944,7 +1441,7 @@
 	background: linear-gradient(
 		90deg,
 		transparent,
-		color-mix( in srgb, currentColor 8%, transparent ),
+		rgba( 255, 255, 255, .55 ),
 		transparent
 	);
 	transform: translateX( -100% );
@@ -957,12 +1454,89 @@
 	}
 }
 
-@media ( prefers-reduced-motion: reduce ) {
-	.sky-aff * {
-		transition: none !important;
+/* ------------------------------------------------------------- dark ground */
+
+.sky-aff--dark {
+	--sky-aff-ink: #eef2fb;
+	--sky-aff-muted: #a3afc6;
+	--sky-aff-line: rgba( 255, 255, 255, .1 );
+	--sky-aff-base: #0c1122;
+	--sky-aff-wash: linear-gradient( 135deg, #0b1024, #170f2e 50%, #06202a );
+	--sky-aff-glass: rgba( 22, 28, 48, .55 );
+	--sky-aff-glass-strong: rgba( 24, 31, 54, .9 );
+	--sky-aff-menu: rgba( 22, 28, 48, .97 );
+	--sky-aff-glass-border: rgba( 255, 255, 255, .12 );
+	--sky-aff-glass-edge: inset 0 1px 0 rgba( 255, 255, 255, .08 );
+	--sky-aff-field: rgba( 255, 255, 255, .06 );
+	--sky-aff-field-border: rgba( 255, 255, 255, .12 );
+	--sky-aff-tint: color-mix( in srgb, var(--sky-aff-accent) 22%, transparent );
+	--sky-aff-shadow: 0 30px 60px -30px rgba( 0, 0, 0, .8 );
+	--sky-aff-shadow-sm: 0 12px 28px -18px rgba( 0, 0, 0, .7 );
+	--sky-aff-error: #ff8a8f;
+}
+
+.sky-aff--dark::before {
+	opacity: .9;
+}
+
+.sky-aff--dark .sky-aff__field input,
+.sky-aff--dark .sky-aff__field select,
+.sky-aff--dark .sky-aff__room-field input {
+	color-scheme: dark;
+}
+
+.sky-aff--dark .sky-aff__field select {
+	background-image: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3afc6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E" );
+}
+
+.sky-aff--dark .sky-aff__field select option {
+	color: #0f172a;
+}
+
+.sky-aff--dark .sky-aff__field input[type="search"] {
+	background-image: url( "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3afc6' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E" );
+}
+
+.sky-aff--dark .sky-aff__price,
+.sky-aff--dark .sky-aff__suggest-aside,
+.sky-aff--dark .sky-aff__suggest-icon,
+.sky-aff--dark .sky-aff__link-btn,
+.sky-aff--dark .sky-aff__seeall,
+.sky-aff--dark .sky-aff__suggest-item--all,
+.sky-aff--dark .sky-aff__swap,
+.sky-aff--dark .sky-aff__chip:has( input:checked ) {
+	color: color-mix( in srgb, var(--sky-aff-accent) 55%, #fff );
+}
+
+.sky-aff--dark .sky-aff__suggest-item--all .sky-aff__suggest-icon {
+	color: #fff;
+}
+
+.sky-aff--dark .sky-aff__badge--good {
+	color: #6ee7a0;
+}
+
+.sky-aff--dark .sky-aff__skeleton::after {
+	background: linear-gradient( 90deg, transparent, rgba( 255, 255, 255, .08 ), transparent );
+}
+
+/* ------------------------------------------------------ fallbacks & motion */
+
+/* Without backdrop-filter the glass would be see-through; make it solid. */
+@supports not ( ( backdrop-filter: blur( 1px ) ) or ( -webkit-backdrop-filter: blur( 1px ) ) ) {
+	.sky-aff {
+		--sky-aff-glass: rgba( 255, 255, 255, .9 );
 	}
 
-	.sky-aff__skeleton::after {
-		animation: none;
+	.sky-aff--dark {
+		--sky-aff-glass: rgba( 22, 28, 48, .94 );
+	}
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.sky-aff *,
+	.sky-aff::before {
+		transition: none !important;
+		animation: none !important;
 	}
 }

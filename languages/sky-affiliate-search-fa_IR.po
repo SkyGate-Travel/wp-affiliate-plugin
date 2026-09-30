@@ -99,8 +99,8 @@ msgstr "حذف"
 msgid "What are you looking for?"
 msgstr "دنبال چه چیزی می‌گردید؟"
 
-msgid "Museum tickets, day trips, transfers…"
-msgstr "بلیت موزه، تور یک‌روزه، ترانسفر…"
+msgid "A city, a museum, a day trip…"
+msgstr "یک شهر، یک موزه، یک تور یک‌روزه…"
 
 msgid "Country"
 msgstr "کشور"
@@ -392,3 +392,25 @@ msgstr "بار"
 
 msgid "Cabin"
 msgstr "دستی"
+
+msgid "Destinations"
+msgstr "مقصدها"
+
+msgid "Categories"
+msgstr "دسته‌ها"
+
+msgid "Browse by category"
+msgstr "مرور بر اساس دسته"
+
+msgid "Everywhere in this country"
+msgstr "همه‌جای این کشور"
+
+msgid "Finding activities…"
+msgstr "در حال یافتن تفریحات…"
+
+msgid "No activity names match — try searching anyway."
+msgstr "نام هیچ تفریحی با این عبارت جور نشد؛ جست‌وجو را امتحان کنید."
+
+#. translators: %s: the words the visitor typed.
+msgid "Search for “%s”"
+msgstr "جست‌وجوی «%s»"
