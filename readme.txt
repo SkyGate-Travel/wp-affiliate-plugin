@@ -103,6 +103,7 @@ Yes. The code is applied when they create their account on the platform, and the
 * A new look: frosted-glass panels over a soft colour backdrop mixed from the site's accent colour, pill tabs with icons, larger fields and buttons, and result cards that lift on hover. It switches to smoked glass on its own when the page behind it is dark.
 * Fixed: the activity Country, City and Category lists stayed empty — the platform sends its locations and categories nested, and they were read as flat lists.
 * Fixed: activity prices could read "195 [object Object]" instead of "$195".
+* Tour cards now show the tour's picture, its destinations and its starting price. The platform only sends pictures and destinations when asked for them, and they were never asked for.
 * Suggestions have their own per-visitor allowance, three times the search one, so typing never uses up the budget for searching.
 
 = 1.1.0 =

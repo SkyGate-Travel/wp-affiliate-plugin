@@ -269,6 +269,8 @@ class Sky_Aff_Shortcode {
 			'resultsCount'      => /* translators: %s: number of results. */ __( '%s results', 'sky-affiliate-search' ),
 			'from'              => __( 'from', 'sky-affiliate-search' ),
 			'perNight'          => __( 'per night', 'sky-affiliate-search' ),
+			// Intl has no currency code for it, so tour prices in toman carry the word.
+			'toman'             => __( 'Toman', 'sky-affiliate-search' ),
 			'nights'            => __( 'nights', 'sky-affiliate-search' ),
 			// Both forms, resolved in JS by count. Kept as two separate
 			// strings rather than one _n() call because the number is only

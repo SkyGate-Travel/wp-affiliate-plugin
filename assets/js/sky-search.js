@@ -3314,7 +3314,8 @@
 					var rows = term ? items.filter( function ( row ) {
 						var haystack = [
 							pick( row, [ 'title', 'name' ] ) || '',
-							pick( row, [ 'destination', 'destination_name', 'city' ] ) || ''
+							tourFacts( row ).where,
+							pick( row, [ 'origin' ] ) || ''
 						].join( ' ' ).toLowerCase();
 
 						return haystack.indexOf( term ) !== -1;
@@ -3374,6 +3375,46 @@
 		}
 	}
 
+	/**
+	 * What a tour card shows, read from the platform's own tour row.
+	 *
+	 * The row names none of it directly: pictures and destinations are
+	 * relations (asked for with include=images,destinations), and the price
+	 * is the cheapest schedule's, in a currency given as the platform's own
+	 * number — 1 rial, 2 toman, 3 dollar, 4 euro.
+	 *
+	 * @param {Object} row Tour row.
+	 * @return {{where: string, image: string, price: string}}
+	 */
+	function tourFacts( row ) {
+		var destinations = ( Array.isArray( row.destinations ) ? row.destinations : [] )
+			.map( function ( item ) {
+				return item && ( item.destination || item.name ) ? String( item.destination || item.name ) : '';
+			} )
+			.filter( Boolean );
+
+		var where = destinations.length
+			? destinations.slice( 0, 3 ).join( ' · ' ) + ( destinations.length > 3 ? ' …' : '' )
+			: String( pick( row, [ 'destination', 'location', 'origin' ] ) || '' );
+
+		var amount = pick( row, [ 'min_price_tour_schedule', 'price', 'base_price', 'from_price' ] );
+		var code = pick( row, [ 'min_currency_tour_schedule', 'currency' ] );
+		var iso = { 1: 'IRR', 3: 'USD', 4: 'EUR' }[ code ] || ( 'string' === typeof code ? code : '' );
+
+		// Intl has no toman, so it is a plain number with the word after it.
+		var price = 2 === Number( code )
+			? ( money( amount, '' ) ? money( amount, '' ) + ' ' + ( t.toman || 'Toman' ) : '' )
+			: money( amount, iso );
+
+		return {
+			where: where,
+			// The full picture, not the thumbnail: the thumbnail is a 160px
+			// square and the card is wider than that.
+			image: pick( row, [ 'images.0.path', 'images.0.thumbnail_path', 'image', 'cover', 'images.0.url', 'images.0' ] ) || '',
+			price: price
+		};
+	}
+
 	function renderTours( container, rows, append ) {
 		if ( ! append ) {
 			container.innerHTML = '';
@@ -3382,10 +3423,9 @@
 		rows.forEach( function ( row ) {
 			var name = pick( row, [ 'title', 'name' ] ) || '—';
 			var slug = pick( row, [ 'slug' ] ) || '';
-			var destination = pick( row, [ 'destination', 'destination_name', 'city' ] ) || '';
-			var image = pick( row, [ 'image', 'cover', 'images.0.url', 'images.0' ] );
-			var price = pick( row, [ 'price', 'base_price', 'from_price' ] );
-			var currency = pick( row, [ 'currency' ] ) || '';
+			var facts = tourFacts( row );
+			var destination = facts.where;
+			var image = facts.image;
 
 			var card = el( 'article', 'sky-aff__card sky-aff__card--tour' );
 
@@ -3394,6 +3434,7 @@
 				var img = document.createElement( 'img' );
 
 				img.src = String( image );
+				img.referrerPolicy = 'no-referrer';
 				img.alt = '';
 				img.loading = 'lazy';
 				img.decoding = 'async';
@@ -3410,7 +3451,7 @@
 			}
 
 			var foot = el( 'div', 'sky-aff__card-foot' );
-			var priceText = money( price, currency );
+			var priceText = facts.price;
 
 			if ( priceText ) {
 				foot.appendChild( el( 'span', 'sky-aff__price', ( t.from || 'from' ) + ' ' + priceText ) );

@@ -1201,7 +1201,12 @@ class Sky_Aff_Rest_Controller {
 		return array(
 			'method' => 'GET',
 			'path'   => 'tours',
-			'query'  => array( 'limit' => $limit > 0 ? min( 60, $limit ) : 24 ),
+			'query'  => array(
+				'limit'   => $limit > 0 ? min( 60, $limit ) : 24,
+				// Pictures and destinations are relations the platform only
+				// sends when asked; without them every tour card was text.
+				'include' => 'images,destinations',
+			),
 		);
 	}
 
