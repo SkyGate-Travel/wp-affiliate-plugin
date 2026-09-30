@@ -4,7 +4,7 @@ Tags: travel, affiliate, hotels, flights, search
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,13 @@ Yes. The code is applied when they create their account on the platform, and the
 2. Settings screen with a successful connection test.
 
 == Changelog ==
+
+= 1.2.0 =
+* The activity search now suggests as you type: matching destinations and categories straight away, and real activities — with photo, city and price — a moment later. Picking a destination or category sets that filter and searches; picking an activity opens it; the last row searches the words as typed. An empty field offers the main categories to browse.
+* A new look: frosted-glass panels over a soft colour backdrop mixed from the site's accent colour, pill tabs with icons, larger fields and buttons, and result cards that lift on hover. It switches to smoked glass on its own when the page behind it is dark.
+* Fixed: the activity Country, City and Category lists stayed empty — the platform sends its locations and categories nested, and they were read as flat lists.
+* Fixed: activity prices could read "195 [object Object]" instead of "$195".
+* Suggestions have their own per-visitor allowance, three times the search one, so typing never uses up the budget for searching.
 
 = 1.1.0 =
 * Flight cards redesigned around what a fare actually is: the airline's logo and name, the journey with its stops and duration on a rail, chips for cabin, aircraft and baggage, and the price set apart — with "N seats left" only when the number is small enough to matter.

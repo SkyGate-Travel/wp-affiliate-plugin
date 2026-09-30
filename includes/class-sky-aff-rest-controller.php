@@ -125,6 +125,31 @@ class Sky_Aff_Rest_Controller {
 			)
 		);
 
+		// The keyword field's live suggestions: a handful of slimmed-down
+		// matches per keystroke pause, so a visitor sees activities appear
+		// while they type rather than only after pressing Search.
+		register_rest_route(
+			SKY_AFF_REST_NS,
+			'/activities/suggest',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'activity_suggest' ),
+				'permission_callback' => $public,
+				'args'                => array(
+					'q' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => static function ( $value ) {
+							$length = mb_strlen( trim( (string) $value ) );
+
+							return $length >= 2 && $length <= 80;
+						},
+					),
+				),
+			)
+		);
+
 		register_rest_route(
 			SKY_AFF_REST_NS,
 			'/activities/config',
@@ -237,7 +262,18 @@ class Sky_Aff_Rest_Controller {
 			return $result;
 		}
 
-		$key   = 'sky_aff_rl_' . md5( $ip . '|' . floor( time() / MINUTE_IN_SECONDS ) );
+		// Suggestions fire on every pause in typing, so they would spend a
+		// visitor's whole search budget before they ever pressed Search. They
+		// get a bucket of their own, three times the size: a typist, not a
+		// scraper, and each answer is six slim rows from a cached call.
+		$bucket = 'sky_aff_rl_';
+
+		if ( false !== strpos( $route, '/activities/suggest' ) ) {
+			$bucket = 'sky_aff_rls_';
+			$limit *= 3;
+		}
+
+		$key   = $bucket . md5( $ip . '|' . floor( time() / MINUTE_IN_SECONDS ) );
 		$count = (int) get_transient( $key );
 
 		if ( $count >= $limit ) {
@@ -964,6 +1000,85 @@ class Sky_Aff_Rest_Controller {
 		}
 
 		return $this->respond( $this->dispatch( $spec ) );
+	}
+
+	/**
+	 * Live suggestions for the activity keyword field.
+	 *
+	 * The same upstream search as activity_search(), capped at six rows and
+	 * cut down to what a suggestion line shows. A full product row carries
+	 * every image and link the supplier has; six of those per keystroke pause
+	 * would make the dropdown slower than the search it is meant to preview.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function activity_suggest( WP_REST_Request $request ) {
+		$result = $this->client->get(
+			'activities',
+			array(
+				'q'        => trim( (string) $request->get_param( 'q' ) ),
+				'per_page' => 6,
+				'language' => Sky_Aff_Settings::language(),
+			),
+			false,
+			// Someone else typed the same three letters a minute ago; the
+			// catalogue has not changed since.
+			10 * MINUTE_IN_SECONDS
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		$data = isset( $result['data'] ) ? $result['data'] : array();
+		$rows = array();
+
+		if ( isset( $data['products'] ) && is_array( $data['products'] ) ) {
+			$rows = $data['products'];
+		} elseif ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+			$rows = $data['data'];
+		} elseif ( is_array( $data ) && isset( $data[0] ) ) {
+			$rows = $data;
+		}
+
+		$items = array();
+
+		foreach ( array_slice( $rows, 0, 6 ) as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
+			$title = $row['titleTranslated'] ?? $row['title'] ?? $row['name'] ?? '';
+
+			if ( '' === trim( (string) $title ) ) {
+				continue;
+			}
+
+			$currency = $row['currency'] ?? '';
+
+			if ( is_array( $currency ) ) {
+				$currency = $currency['code'] ?? '';
+			}
+
+			$image = $row['image_url'] ?? $row['photo'] ?? $row['image'] ?? '';
+
+			if ( '' === $image && ! empty( $row['images'] ) && is_array( $row['images'] ) ) {
+				$image = is_array( $row['images'][0] ) ? ( $row['images'][0]['url'] ?? '' ) : $row['images'][0];
+			}
+
+			$items[] = array(
+				'id'       => (string) ( $row['productUuid'] ?? $row['uuid'] ?? $row['id'] ?? '' ),
+				'title'    => (string) $title,
+				'city'     => (string) ( $row['cityName'] ?? $row['city'] ?? '' ),
+				'type'     => (string) ( $row['typeName'] ?? '' ),
+				'image'    => esc_url_raw( (string) $image ),
+				'price'    => isset( $row['basePrice'] ) ? (float) $row['basePrice'] : null,
+				'currency' => (string) $currency,
+			);
+		}
+
+		return new WP_REST_Response( array( 'data' => $items ), 200 );
 	}
 
 	/**

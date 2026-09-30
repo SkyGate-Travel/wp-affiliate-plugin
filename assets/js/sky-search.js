@@ -502,6 +502,13 @@
 			return '';
 		}
 
+		// Activity suppliers send the currency as { code, symbol, uuid }
+		// rather than a bare ISO code. Handed straight to Intl that throws,
+		// and the fallback below printed "195 [object Object]".
+		if ( currency && 'object' === typeof currency ) {
+			currency = currency.code || currency.iso || '';
+		}
+
 		try {
 			return new Intl.NumberFormat( cfg.language || undefined, {
 				style: currency ? 'currency' : 'decimal',
@@ -809,6 +816,36 @@
 		} );
 	}
 
+	/**
+	 * Whether the page under the widget is dark.
+	 *
+	 * The widget paints its own backdrop, so it has to choose light or smoked
+	 * glass itself — and the visitor's OS setting says nothing about a theme
+	 * that is dark regardless. The first ancestor with a painted background
+	 * is what the widget actually sits on.
+	 *
+	 * @param {HTMLElement} root Widget root.
+	 * @return {boolean}
+	 */
+	function onDarkGround( root ) {
+		var node = root.parentElement;
+
+		while ( node ) {
+			var match = window.getComputedStyle( node ).backgroundColor.match( /[\d.]+/g );
+
+			if ( match && match.length >= 3 && ( match.length < 4 || Number( match[ 3 ] ) > 0.5 ) ) {
+				// Relative luminance, near enough for a light/dark call.
+				var luminance = ( 0.2126 * match[ 0 ] + 0.7152 * match[ 1 ] + 0.0722 * match[ 2 ] ) / 255;
+
+				return luminance < 0.4;
+			}
+
+			node = node.parentElement;
+		}
+
+		return false;
+	}
+
 	/* ------------------------------------------------------------ the widget */
 
 	/**
@@ -817,6 +854,10 @@
 	 * @param {HTMLElement} root Widget root.
 	 */
 	function initWidget( root ) {
+		if ( onDarkGround( root ) ) {
+			root.classList.add( 'sky-aff--dark' );
+		}
+
 		var tabs = root.querySelectorAll( '[data-sky-tab]' );
 		var panels = root.querySelectorAll( '[data-sky-panel]' );
 
@@ -2369,7 +2410,14 @@
 		var countrySel = form.querySelector( '[data-sky-country]' );
 		var citySel = form.querySelector( '[data-sky-city]' );
 		var categorySel = form.querySelector( '[data-sky-category]' );
-		var locations = [];
+		var keyword = form.querySelector( 'input[name="q"]' );
+		var taxonomy = { countries: [], categories: [] };
+
+		// Text in the keyword field that stands for a filter the visitor
+		// picked — "Dubai" once they chose the city — rather than a word to
+		// search titles for. Sent as a keyword too, it would narrow the city's
+		// activities to the few that repeat its name.
+		var standIn = '';
 
 		function fillSelect( select, options, placeholder ) {
 			select.innerHTML = '';
@@ -2380,35 +2428,50 @@
 			} );
 		}
 
+		function fillCities( country ) {
+			if ( ! citySel ) {
+				return;
+			}
+
+			fillSelect(
+				citySel,
+				( ( country && country.cities ) || [] ).map( function ( city ) {
+					return { value: city.id, label: city.name };
+				} ),
+				t.anyCity || 'Any city'
+			);
+		}
+
+		function countryById( id ) {
+			return taxonomy.countries.filter( function ( country ) {
+				return country.id === id;
+			} )[ 0 ] || null;
+		}
+
 		// The taxonomy is tenant-global and cached upstream, so one fetch per
-		// page load populates every dropdown.
+		// page load populates every dropdown and the keyword suggestions.
 		api( '/activities/config' ).then( function ( payload ) {
-			var data = payload.data || {};
+			taxonomy = activityTaxonomy( payload.data || {} );
 
-			locations = data.locations || data.countries || [];
-
-			if ( Array.isArray( locations ) && locations.length && countrySel ) {
+			if ( taxonomy.countries.length && countrySel ) {
 				fillSelect(
 					countrySel,
-					locations.map( function ( country ) {
-						return {
-							value: country.countryUuid || country.uuid || country.id || country.country,
-							label: country.country || country.name || ''
-						};
+					taxonomy.countries.map( function ( country ) {
+						return { value: country.id, label: country.name };
 					} ),
 					t.anyCountry || 'Any country'
 				);
 			}
 
-			var categories = data.categories || [];
-
-			if ( Array.isArray( categories ) && categories.length && categorySel ) {
+			if ( taxonomy.categories.length && categorySel ) {
 				fillSelect(
 					categorySel,
-					categories.map( function ( category ) {
+					taxonomy.categories.map( function ( category ) {
+						// Sub-categories indent under their parent: a select
+						// has no other way to show a tree.
 						return {
-							value: category.uuid || category.id || category.slug || category.name,
-							label: category.name || category.title || ''
+							value: category.id,
+							label: new Array( category.depth + 1 ).join( '   ' ) + category.name
 						};
 					} ),
 					t.anyCategory || 'Any category'
@@ -2419,26 +2482,49 @@
 			// the dropdowns simply stay on their placeholder.
 		} );
 
-		if ( countrySel && citySel ) {
+		if ( countrySel ) {
 			countrySel.addEventListener( 'change', function () {
-				var selected = locations.filter( function ( country ) {
-					var id = country.countryUuid || country.uuid || country.id || country.country;
+				fillCities( countryById( countrySel.value ) );
+			} );
+		}
 
-					return String( id ) === countrySel.value;
-				} )[ 0 ];
+		var suggestList = form.querySelector( '[data-sky-suggest="activity"]' );
 
-				var cities = ( selected && selected.cities ) || [];
+		if ( keyword && suggestList ) {
+			activitySuggest( {
+				input: keyword,
+				list: suggestList,
+				taxonomy: function () {
+					return taxonomy;
+				},
+				onPlace: function ( country, city ) {
+					if ( countrySel ) {
+						countrySel.value = country.id;
+					}
 
-				fillSelect(
-					citySel,
-					cities.map( function ( city ) {
-						return {
-							value: city.cityUuid || city.uuid || city.id || city.city,
-							label: city.city || city.name || ''
-						};
-					} ),
-					t.anyCity || 'Any city'
-				);
+					fillCities( country );
+
+					if ( citySel ) {
+						citySel.value = city ? city.id : '';
+					}
+
+					standIn = keyword.value.trim();
+					run( 1 );
+				},
+				onCategory: function ( category ) {
+					if ( categorySel ) {
+						categorySel.value = category.id;
+					}
+
+					standIn = keyword.value.trim();
+					run( 1 );
+				},
+				onSearch: function () {
+					run( 1 );
+				},
+				onEdit: function () {
+					standIn = '';
+				}
 			} );
 		}
 
@@ -2446,7 +2532,7 @@
 
 		function currentQuery() {
 			return {
-				q: form.querySelector( 'input[name="q"]' ).value.trim(),
+				q: keyword && keyword.value.trim() !== standIn ? keyword.value.trim() : '',
 				country: countrySel ? countrySel.value : '',
 				city: citySel ? citySel.value : '',
 				category: categorySel ? categorySel.value : '',
@@ -2550,6 +2636,596 @@
 		} );
 	}
 
+	/**
+	 * Flatten the activity taxonomy into what the form needs.
+	 *
+	 * The supplier nests locations continent → country → state → city, each
+	 * level wrapped in { data: [...] }, keys the continents "0".."n" next to a
+	 * product_count, and wraps the category tree the same way. Older tenants
+	 * sent flat country rows with a `cities` array. Both come out as:
+	 *
+	 *   countries:  [ { id, name, cities: [ { id, name } ] } ]  (A→Z)
+	 *   categories: [ { id, name, depth } ]                     (tree order)
+	 *
+	 * @param {Object} data /activities/config payload data.
+	 * @return {{countries: Array, categories: Array}}
+	 */
+	function activityTaxonomy( data ) {
+		function list( value ) {
+			if ( Array.isArray( value ) ) {
+				return value;
+			}
+
+			if ( value && Array.isArray( value.data ) ) {
+				return value.data;
+			}
+
+			if ( value && 'object' === typeof value ) {
+				return Object.keys( value ).map( function ( key ) {
+					return value[ key ];
+				} ).filter( function ( item ) {
+					return item && 'object' === typeof item;
+				} );
+			}
+
+			return [];
+		}
+
+		function idOf( row, keys ) {
+			return String( pick( row, keys ) || '' );
+		}
+
+		var countries = [];
+		var seen = {};
+
+		function addCountry( row, cities ) {
+			var id = idOf( row, [ 'countryUuid', 'uuid', 'id', 'code' ] );
+			var name = row.country || row.name || '';
+
+			if ( ! id || ! name || seen[ id ] ) {
+				return;
+			}
+
+			seen[ id ] = true;
+			countries.push( {
+				id: id,
+				name: String( name ),
+				cities: cities.map( function ( city ) {
+					return {
+						id: idOf( city, [ 'cityUuid', 'uuid', 'id' ] ),
+						name: String( city.city || city.name || '' )
+					};
+				} ).filter( function ( city ) {
+					return city.id && city.name;
+				} ).sort( function ( a, b ) {
+					return a.name.localeCompare( b.name );
+				} )
+			} );
+		}
+
+		list( data.locations || data.countries ).forEach( function ( entry ) {
+			// Either a continent map { "0": continent, product_count }, a
+			// continent, or already a country.
+			var continents = entry && entry.countries ? [ entry ] : list( entry ).filter( function ( item ) {
+				return item.countries;
+			} );
+
+			if ( ! continents.length && entry && ( entry.country || entry.name ) ) {
+				addCountry( entry, list( entry.cities ) );
+
+				return;
+			}
+
+			continents.forEach( function ( continent ) {
+				list( continent.countries ).forEach( function ( country ) {
+					var cities = list( country.cities );
+
+					list( country.states ).forEach( function ( state ) {
+						cities = cities.concat( list( state.cities ) );
+					} );
+
+					addCountry( country, cities );
+				} );
+			} );
+		} );
+
+		countries.sort( function ( a, b ) {
+			return a.name.localeCompare( b.name );
+		} );
+
+		var categories = [];
+
+		( function walk( rows, depth ) {
+			rows.forEach( function ( row ) {
+				var id = idOf( row, [ 'uuid', 'id', 'slug' ] );
+				var name = row.name || row.title || '';
+
+				if ( id && name ) {
+					categories.push( { id: id, name: String( name ), depth: depth } );
+				}
+
+				walk( list( row.children ), depth + 1 );
+			} );
+		}( list( data.categories ), 0 ) );
+
+		return { countries: countries, categories: categories };
+	}
+
+	/**
+	 * Live suggestions under the activity keyword field.
+	 *
+	 * Three groups, so what a visitor types always finds something: places
+	 * and categories matched on the spot from the taxonomy already on the
+	 * page, and actual activities from the platform a moment later. Picking a
+	 * place or category sets that filter and searches; picking an activity
+	 * goes straight to it; the last row searches the words as typed.
+	 *
+	 * @param {Object}   opts
+	 * @param {HTMLInputElement} opts.input
+	 * @param {HTMLElement}      opts.list
+	 * @param {Function} opts.taxonomy   () => { countries, categories }.
+	 * @param {Function} opts.onPlace    (country, city|null).
+	 * @param {Function} opts.onCategory (category).
+	 * @param {Function} opts.onSearch   Search the typed words.
+	 * @param {Function} opts.onEdit     The text changed by hand.
+	 */
+	function activitySuggest( opts ) {
+		var input = opts.input;
+		var list = opts.list;
+		var options = [];
+		var activeIndex = -1;
+		var controller = null;
+		var remote = { query: null, items: null, failed: false };
+		var cache = {};
+		var listId = list.id || ( input.id ? input.id + '-suggest' : '' );
+
+		if ( listId ) {
+			list.id = listId;
+			input.setAttribute( 'aria-controls', listId );
+		}
+
+		input.setAttribute( 'role', 'combobox' );
+		input.setAttribute( 'aria-autocomplete', 'list' );
+		input.setAttribute( 'aria-expanded', 'false' );
+
+		function fold( text ) {
+			return String( text || '' ).toLocaleLowerCase();
+		}
+
+		/**
+		 * Up to `limit` entries whose name contains the query, the ones that
+		 * start with it first — "Rome" before "Jerome".
+		 */
+		function matching( rows, query, limit, nameOf ) {
+			var starts = [];
+			var within = [];
+
+			rows.forEach( function ( row ) {
+				var name = fold( nameOf( row ) );
+				var at = name.indexOf( query );
+
+				if ( 0 === at ) {
+					starts.push( row );
+				} else if ( at > 0 && /[\s\-(,'’]/.test( name.charAt( at - 1 ) ) ) {
+					// Only at a word boundary: "an" should find "Antalya" and
+					// "San Diego", not every name with those two letters in it.
+					within.push( row );
+				}
+			} );
+
+			return starts.concat( within ).slice( 0, limit );
+		}
+
+		function close() {
+			list.hidden = true;
+			list.innerHTML = '';
+			options = [];
+			activeIndex = -1;
+			input.setAttribute( 'aria-expanded', 'false' );
+			input.removeAttribute( 'aria-activedescendant' );
+		}
+
+		function choose( option ) {
+			if ( ! option ) {
+				return;
+			}
+
+			runDebounced.cancel();
+
+			if ( 'activity' === option.kind ) {
+				close();
+
+				return;
+			}
+
+			if ( controller ) {
+				controller.abort();
+				controller = null;
+			}
+
+			if ( 'search' !== option.kind ) {
+				input.value = option.label;
+			}
+
+			close();
+
+			if ( 'place' === option.kind ) {
+				opts.onPlace( option.country, option.city );
+			} else if ( 'category' === option.kind ) {
+				opts.onCategory( option.category );
+			} else {
+				opts.onSearch();
+			}
+		}
+
+		function highlight( index ) {
+			activeIndex = index;
+
+			options.forEach( function ( option, i ) {
+				var on = i === index;
+
+				option.node.classList.toggle( 'is-active', on );
+				option.node.setAttribute( 'aria-selected', on ? 'true' : 'false' );
+
+				if ( on ) {
+					if ( option.node.id ) {
+						input.setAttribute( 'aria-activedescendant', option.node.id );
+					}
+
+					if ( option.node.scrollIntoView ) {
+						option.node.scrollIntoView( { block: 'nearest' } );
+					}
+				}
+			} );
+		}
+
+		function group( label ) {
+			var li = el( 'li', 'sky-aff__suggest-group', label );
+
+			li.setAttribute( 'role', 'presentation' );
+			list.appendChild( li );
+		}
+
+		function add( option, node ) {
+			node.setAttribute( 'role', 'option' );
+			node.setAttribute( 'aria-selected', 'false' );
+
+			if ( listId ) {
+				node.id = listId + '-' + options.length;
+			}
+
+			node.addEventListener( 'mousedown', function ( event ) {
+				// Keeps focus in the field, so blur does not close the list
+				// before the click lands. An activity is a real link: its
+				// click still follows it, in whatever window links open in.
+				event.preventDefault();
+			} );
+
+			node.addEventListener( 'click', function () {
+				choose( option );
+			} );
+
+			option.node = node;
+			options.push( option );
+			list.appendChild( node );
+		}
+
+		function line( node, icon, main, sub, aside ) {
+			var badge = el( 'span', 'sky-aff__suggest-icon' );
+
+			badge.innerHTML = icon;
+			badge.setAttribute( 'aria-hidden', 'true' );
+			node.appendChild( badge );
+
+			var text = el( 'span', 'sky-aff__suggest-text' );
+
+			text.appendChild( el( 'span', 'sky-aff__suggest-main', main ) );
+
+			if ( sub ) {
+				text.appendChild( el( 'span', 'sky-aff__suggest-sub', sub ) );
+			}
+
+			node.appendChild( text );
+
+			if ( aside ) {
+				node.appendChild( el( 'span', 'sky-aff__suggest-aside', aside ) );
+			}
+
+			return node;
+		}
+
+		function render() {
+			var query = fold( input.value.trim() );
+			var taxonomy = opts.taxonomy();
+
+			list.innerHTML = '';
+			options = [];
+			activeIndex = -1;
+
+			// An empty field: something to click instead of a blank box.
+			if ( ! query ) {
+				var top = taxonomy.categories.filter( function ( category ) {
+					return 0 === category.depth;
+				} ).slice( 0, 8 );
+
+				if ( ! top.length ) {
+					close();
+
+					return;
+				}
+
+				group( t.browseCategories || 'Browse by category' );
+
+				top.forEach( function ( category ) {
+					add(
+						{ kind: 'category', label: category.name, category: category },
+						line( el( 'li', 'sky-aff__suggest-item' ), ICONS.tag, category.name )
+					);
+				} );
+
+				open();
+
+				return;
+			}
+
+			var places = [];
+
+			taxonomy.countries.forEach( function ( country ) {
+				country.cities.forEach( function ( city ) {
+					places.push( { country: country, city: city, name: city.name } );
+				} );
+			} );
+
+			places = matching( places, query, 4, function ( place ) {
+				return place.name;
+			} ).concat( matching( taxonomy.countries, query, 2, function ( country ) {
+				return country.name;
+			} ).map( function ( country ) {
+				return { country: country, city: null, name: country.name };
+			} ) );
+
+			if ( places.length ) {
+				group( t.suggestPlaces || 'Destinations' );
+
+				places.forEach( function ( place ) {
+					add(
+						{ kind: 'place', label: place.name, country: place.country, city: place.city },
+						line(
+							el( 'li', 'sky-aff__suggest-item' ),
+							ICONS.pin,
+							place.name,
+							place.city ? place.country.name : ( t.allOfCountry || 'Everywhere in this country' )
+						)
+					);
+				} );
+			}
+
+			var categories = matching( taxonomy.categories, query, 3, function ( category ) {
+				return category.name;
+			} );
+
+			if ( categories.length ) {
+				group( t.suggestCategories || 'Categories' );
+
+				categories.forEach( function ( category ) {
+					add(
+						{ kind: 'category', label: category.name, category: category },
+						line( el( 'li', 'sky-aff__suggest-item' ), ICONS.tag, category.name )
+					);
+				} );
+			}
+
+			group( t.activity || 'Activities' );
+
+			var current = remote.query === query ? remote : null;
+
+			if ( ! current || ( ! current.items && ! current.failed ) ) {
+				var wait = el( 'li', 'sky-aff__suggest-empty sky-aff__suggest-loading', t.findingActivities || 'Finding activities…' );
+
+				wait.setAttribute( 'role', 'presentation' );
+				list.appendChild( wait );
+			} else if ( current.items && current.items.length ) {
+				current.items.forEach( function ( item ) {
+					var href = item.id
+						? affiliateUrl( cfg.links.activity + encodeURIComponent( item.id ), {} )
+						: affiliateUrl( cfg.links.activity + 'result', { keyword: input.value.trim(), language: cfg.language } );
+					var a = outLink( href, '', 'sky-aff__suggest-item sky-aff__suggest-item--activity' );
+					var thumb = el( 'span', 'sky-aff__suggest-thumb' );
+
+					a.textContent = '';
+					a.tabIndex = -1;
+
+					if ( item.image ) {
+						var img = document.createElement( 'img' );
+
+						img.src = item.image;
+						img.referrerPolicy = 'no-referrer';
+						img.alt = '';
+						img.loading = 'lazy';
+						img.decoding = 'async';
+						img.addEventListener( 'error', function () {
+							img.remove();
+						} );
+						thumb.appendChild( img );
+					}
+
+					a.appendChild( thumb );
+
+					var text = el( 'span', 'sky-aff__suggest-text' );
+
+					text.appendChild( el( 'span', 'sky-aff__suggest-main', item.title ) );
+					text.appendChild( el( 'span', 'sky-aff__suggest-sub', [ item.city, item.type ].filter( Boolean ).join( ' · ' ) ) );
+					a.appendChild( text );
+
+					var price = money( item.price, item.currency );
+
+					if ( price ) {
+						a.appendChild( el( 'span', 'sky-aff__suggest-aside', price ) );
+					}
+
+					add( { kind: 'activity', label: item.title, href: href }, a );
+				} );
+			} else {
+				var none = el( 'li', 'sky-aff__suggest-empty', t.noActivityMatches || 'No activity names match — try searching anyway.' );
+
+				none.setAttribute( 'role', 'presentation' );
+				list.appendChild( none );
+			}
+
+			add(
+				{ kind: 'search', label: input.value.trim() },
+				line(
+					el( 'li', 'sky-aff__suggest-item sky-aff__suggest-item--all' ),
+					ICONS.search,
+					( t.searchFor || 'Search for “%s”' ).replace( '%s', input.value.trim() )
+				)
+			);
+
+			open();
+		}
+
+		function open() {
+			list.hidden = false;
+			input.setAttribute( 'aria-expanded', 'true' );
+		}
+
+		function fetchRemote( query ) {
+			if ( cache[ query ] ) {
+				remote = { query: query, items: cache[ query ], failed: false };
+				render();
+
+				return;
+			}
+
+			if ( controller ) {
+				controller.abort();
+			}
+
+			controller = window.AbortController ? new AbortController() : null;
+			remote = { query: query, items: null, failed: false };
+
+			api( '/activities/suggest', {
+				query: { q: query },
+				signal: controller ? controller.signal : undefined
+			} ).then( function ( payload ) {
+				cache[ query ] = Array.isArray( payload.data ) ? payload.data : [];
+
+				if ( remote.query === query ) {
+					remote.items = cache[ query ];
+					render();
+				}
+			} ).catch( function ( error ) {
+				if ( error && 'AbortError' === error.name ) {
+					return;
+				}
+
+				if ( remote.query === query ) {
+					remote.failed = true;
+					render();
+				}
+			} );
+		}
+
+		var runDebounced = debounce( function () {
+			var query = fold( input.value.trim() );
+
+			if ( query.length >= 2 && document.activeElement === input ) {
+				fetchRemote( query );
+			}
+		}, 280 );
+
+		input.addEventListener( 'input', function () {
+			opts.onEdit();
+
+			var query = fold( input.value.trim() );
+
+			if ( 1 === query.length ) {
+				// One letter matches half the catalogue: say what it takes
+				// instead of guessing.
+				runDebounced.cancel();
+				list.innerHTML = '';
+				options = [];
+				list.appendChild( el( 'li', 'sky-aff__suggest-empty', t.typeToSearch || 'Type at least 2 characters…' ) );
+				open();
+
+				return;
+			}
+
+			// Places and categories answer instantly; activities follow once
+			// typing pauses.
+			render();
+			runDebounced();
+		} );
+
+		input.addEventListener( 'focus', function () {
+			var query = fold( input.value.trim() );
+
+			render();
+
+			if ( query.length >= 2 && remote.query !== query ) {
+				fetchRemote( query );
+			}
+		} );
+
+		input.addEventListener( 'blur', function () {
+			window.setTimeout( close, 150 );
+		} );
+
+		input.addEventListener( 'keydown', function ( event ) {
+			if ( 'Escape' === event.key ) {
+				close();
+
+				return;
+			}
+
+			if ( list.hidden || ! options.length ) {
+				return;
+			}
+
+			if ( 'ArrowDown' === event.key ) {
+				event.preventDefault();
+				highlight( activeIndex + 1 >= options.length ? 0 : activeIndex + 1 );
+			} else if ( 'ArrowUp' === event.key ) {
+				event.preventDefault();
+				highlight( activeIndex <= 0 ? options.length - 1 : activeIndex - 1 );
+			} else if ( 'Enter' === event.key ) {
+				var option = options[ activeIndex ];
+
+				if ( ! option ) {
+					// Plain Enter searches the words, via the form's submit.
+					runDebounced.cancel();
+					close();
+
+					return;
+				}
+
+				event.preventDefault();
+
+				// An activity is a link: clicking it is the keyboard
+				// equivalent, and its click handler does the rest.
+				if ( 'activity' === option.kind ) {
+					option.node.click();
+				} else {
+					choose( option );
+				}
+			}
+		} );
+	}
+
+	/** Small inline icons for the suggestion rows. Stroke follows currentColor. */
+	var ICONS = ( function () {
+		function svg( path ) {
+			return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
+				'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
+		}
+
+		return {
+			pin: svg( '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>' ),
+			tag: svg( '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>' ),
+			search: svg( '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>' )
+		};
+	}() );
+
 	function renderActivities( container, rows, append ) {
 		if ( ! append ) {
 			container.innerHTML = '';
@@ -2570,6 +3246,8 @@
 				var img = document.createElement( 'img' );
 
 				img.src = String( image );
+				// Some supplier CDNs refuse images to referers they do not know.
+				img.referrerPolicy = 'no-referrer';
 				img.alt = '';
 				img.loading = 'lazy';
 				img.decoding = 'async';

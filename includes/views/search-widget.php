@@ -27,6 +27,15 @@ $sky_aff_labels = array(
 	'activity' => __( 'Activities', 'sky-affiliate-search' ),
 	'tour'     => __( 'Tours', 'sky-affiliate-search' ),
 );
+
+// Line icons for the tabs, drawn in currentColor so they follow the tab state.
+$sky_aff_svg   = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">%s</svg>';
+$sky_aff_icons = array(
+	'flight'   => sprintf( $sky_aff_svg, '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>' ),
+	'hotel'    => sprintf( $sky_aff_svg, '<path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-5h6v5"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 13.5h.01M16 13.5h.01"/>' ),
+	'activity' => sprintf( $sky_aff_svg, '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M13 6v2M13 11v2M13 16v2"/>' ),
+	'tour'     => sprintf( $sky_aff_svg, '<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>' ),
+);
 ?>
 <div
 	class="sky-aff"
@@ -51,7 +60,8 @@ $sky_aff_labels = array(
 					aria-selected="<?php echo $sky_aff_type === $open ? 'true' : 'false'; ?>"
 					data-sky-tab="<?php echo esc_attr( $sky_aff_type ); ?>"
 				>
-					<?php echo esc_html( $sky_aff_labels[ $sky_aff_type ] ); ?>
+					<span class="sky-aff__tab-icon" aria-hidden="true"><?php echo $sky_aff_icons[ $sky_aff_type ]; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed SVG markup defined above. ?></span>
+					<span class="sky-aff__tab-label"><?php echo esc_html( $sky_aff_labels[ $sky_aff_type ] ); ?></span>
 				</button>
 			<?php endforeach; ?>
 		</div>
@@ -259,8 +269,10 @@ $sky_aff_labels = array(
 								type="search"
 								id="<?php echo esc_attr( $sky_aff_id . '-keyword' ); ?>"
 								name="q"
-								placeholder="<?php esc_attr_e( 'Museum tickets, day trips, transfers…', 'sky-affiliate-search' ); ?>"
+								autocomplete="off"
+								placeholder="<?php esc_attr_e( 'A city, a museum, a day trip…', 'sky-affiliate-search' ); ?>"
 							/>
+							<ul class="sky-aff__suggest sky-aff__suggest--rich" id="<?php echo esc_attr( $sky_aff_id . '-keyword-suggest' ); ?>" data-sky-suggest="activity" role="listbox" hidden></ul>
 						</div>
 						<div class="sky-aff__field sky-aff__field--submit">
 							<button type="submit" class="sky-aff__submit"><?php esc_html_e( 'Search', 'sky-affiliate-search' ); ?></button>
