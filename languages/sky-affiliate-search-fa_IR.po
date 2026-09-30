@@ -414,3 +414,6 @@ msgstr "نام هیچ تفریحی با این عبارت جور نشد؛ جست
 #. translators: %s: the words the visitor typed.
 msgid "Search for “%s”"
 msgstr "جست‌وجوی «%s»"
+
+msgid "Toman"
+msgstr "تومان"
