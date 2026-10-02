@@ -282,8 +282,6 @@ class Sky_Aff_Shortcode {
 			'noPlaces'          => __( 'No matching places.', 'sky-affiliate-search' ),
 			// The activity keyword field's live suggestions.
 			'suggestPlaces'     => __( 'Destinations', 'sky-affiliate-search' ),
-			'suggestCategories' => __( 'Categories', 'sky-affiliate-search' ),
-			'browseCategories'  => __( 'Browse by category', 'sky-affiliate-search' ),
 			'allOfCountry'      => __( 'Everywhere in this country', 'sky-affiliate-search' ),
 			'findingActivities' => __( 'Finding activities…', 'sky-affiliate-search' ),
 			'noActivityMatches' => __( 'No activity names match — try searching anyway.', 'sky-affiliate-search' ),

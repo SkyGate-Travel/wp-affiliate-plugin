@@ -2511,14 +2511,6 @@
 					standIn = keyword.value.trim();
 					run( 1 );
 				},
-				onCategory: function ( category ) {
-					if ( categorySel ) {
-						categorySel.value = category.id;
-					}
-
-					standIn = keyword.value.trim();
-					run( 1 );
-				},
 				onSearch: function () {
 					run( 1 );
 				},
@@ -2634,6 +2626,23 @@
 			event.preventDefault();
 			run( 1 );
 		} );
+
+		// Something to look at before anything is typed: the empty form is a
+		// search for every activity, so the tab opens on the first cards of
+		// that — but only when it is the tab actually on screen, otherwise a
+		// hidden panel costs every visitor a request they never asked for.
+		if ( panel.classList.contains( 'is-active' ) ) {
+			run( 1 );
+		} else {
+			var tab = document.querySelector( '[data-sky-tab="activity"]' );
+
+			if ( tab ) {
+				tab.addEventListener( 'click', function once() {
+					tab.removeEventListener( 'click', once );
+					run( 1 );
+				} );
+			}
+		}
 	}
 
 	/**
@@ -2754,18 +2763,17 @@
 	/**
 	 * Live suggestions under the activity keyword field.
 	 *
-	 * Three groups, so what a visitor types always finds something: places
-	 * and categories matched on the spot from the taxonomy already on the
-	 * page, and actual activities from the platform a moment later. Picking a
-	 * place or category sets that filter and searches; picking an activity
-	 * goes straight to it; the last row searches the words as typed.
+	 * Two groups, so what a visitor types always finds something: places
+	 * matched on the spot from the taxonomy already on the page, and actual
+	 * activities from the platform a moment later. Picking a place sets that
+	 * filter and searches; picking an activity goes straight to it; the last
+	 * row searches the words as typed. Categories are left to their select.
 	 *
 	 * @param {Object}   opts
 	 * @param {HTMLInputElement} opts.input
 	 * @param {HTMLElement}      opts.list
 	 * @param {Function} opts.taxonomy   () => { countries, categories }.
 	 * @param {Function} opts.onPlace    (country, city|null).
-	 * @param {Function} opts.onCategory (category).
 	 * @param {Function} opts.onSearch   Search the typed words.
 	 * @param {Function} opts.onEdit     The text changed by hand.
 	 */
@@ -2851,8 +2859,6 @@
 
 			if ( 'place' === option.kind ) {
 				opts.onPlace( option.country, option.city );
-			} else if ( 'category' === option.kind ) {
-				opts.onCategory( option.category );
 			} else {
 				opts.onSearch();
 			}
@@ -2942,28 +2948,10 @@
 			options = [];
 			activeIndex = -1;
 
-			// An empty field: something to click instead of a blank box.
+			// Nothing to suggest for an empty field: categories have their own
+			// select further down the form.
 			if ( ! query ) {
-				var top = taxonomy.categories.filter( function ( category ) {
-					return 0 === category.depth;
-				} ).slice( 0, 8 );
-
-				if ( ! top.length ) {
-					close();
-
-					return;
-				}
-
-				group( t.browseCategories || 'Browse by category' );
-
-				top.forEach( function ( category ) {
-					add(
-						{ kind: 'category', label: category.name, category: category },
-						line( el( 'li', 'sky-aff__suggest-item' ), ICONS.tag, category.name )
-					);
-				} );
-
-				open();
+				close();
 
 				return;
 			}
@@ -2996,21 +2984,6 @@
 							place.name,
 							place.city ? place.country.name : ( t.allOfCountry || 'Everywhere in this country' )
 						)
-					);
-				} );
-			}
-
-			var categories = matching( taxonomy.categories, query, 3, function ( category ) {
-				return category.name;
-			} );
-
-			if ( categories.length ) {
-				group( t.suggestCategories || 'Categories' );
-
-				categories.forEach( function ( category ) {
-					add(
-						{ kind: 'category', label: category.name, category: category },
-						line( el( 'li', 'sky-aff__suggest-item' ), ICONS.tag, category.name )
 					);
 				} );
 			}
@@ -3151,7 +3124,7 @@
 				return;
 			}
 
-			// Places and categories answer instantly; activities follow once
+			// Places answer instantly; activities follow once
 			// typing pauses.
 			render();
 			runDebounced();
@@ -3221,7 +3194,6 @@
 
 		return {
 			pin: svg( '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>' ),
-			tag: svg( '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/>' ),
 			search: svg( '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>' )
 		};
 	}() );
