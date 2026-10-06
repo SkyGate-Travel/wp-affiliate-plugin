@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Sky Affiliate Search
- * Plugin URI:        https://github.com/nextpay-ir/sky-wp
+ * Plugin URI:        https://github.com/SkyGate-Travel/wp-affiliate-plugin
  * Description:       Adds a travel search page (flights, hotels, activities, tours) to any WordPress site. Visitors search and filter live inventory from a Sky platform, then follow an affiliate-tagged link to the platform to book.
  * Version:           1.2.0
  * Requires at least: 6.0
