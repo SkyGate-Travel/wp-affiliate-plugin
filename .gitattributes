@@ -1,0 +1,6 @@
+# Left out of the release ZIP (git archive). Everything else ships.
+/.github            export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/assets/css/package.json      export-ignore
+/assets/css/package-lock.json export-ignore

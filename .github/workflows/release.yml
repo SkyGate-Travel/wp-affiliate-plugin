@@ -1,0 +1,74 @@
+# Publishes the installable ZIP as a GitHub release whenever the version in the
+# plugin header changes on main. The asset name never changes, so
+#   https://github.com/SkyGate-Travel/wp-affiliate-plugin/releases/latest/download/sky-affiliate-search.zip
+# always serves the newest version — the seller panel links straight to it.
+#
+# To release: bump the version in all three places (plugin header, SKY_AFF_VERSION,
+# readme.txt "Stable tag"), add its changelog entry, push to main.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read and cross-check the version
+        id: version
+        run: |
+          header=$(grep -oP '^\s*\*\s*Version:\s*\K[0-9][0-9.]*' sky-affiliate-search.php)
+          constant=$(grep -oP "define\(\s*'SKY_AFF_VERSION',\s*'\K[^']+" sky-affiliate-search.php)
+          stable=$(grep -oP '^Stable tag:\s*\K\S+' readme.txt)
+          echo "header=$header constant=$constant stable=$stable"
+          if [ "$header" != "$constant" ] || [ "$header" != "$stable" ]; then
+            echo "::error::Version mismatch: header $header, SKY_AFF_VERSION $constant, Stable tag $stable"
+            exit 1
+          fi
+          echo "version=$header" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if this version is already released
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the ZIP
+        if: steps.exists.outputs.released == 'false'
+        run: |
+          git archive --format=zip --prefix=sky-affiliate-search/ -o sky-affiliate-search.zip HEAD
+          unzip -l sky-affiliate-search.zip
+
+      - name: Extract this version's changelog
+        if: steps.exists.outputs.released == 'false'
+        run: |
+          awk -v v="= ${{ steps.version.outputs.version }} =" '
+            $0 == v { on = 1; next }
+            on && /^= / { exit }
+            on && /^== / { exit }
+            on { print }
+          ' readme.txt > notes.md
+          cat notes.md
+
+      - name: Publish the release
+        if: steps.exists.outputs.released == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" sky-affiliate-search.zip \
+            --title "Sky Affiliate Search ${{ steps.version.outputs.version }}" \
+            --notes-file notes.md \
+            --latest
